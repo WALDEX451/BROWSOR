@@ -15,6 +15,7 @@ BROWSOR is a desktop browser built with Python, PySide6, and Qt WebEngine. Custo
 - Enable or disable a basic filter for known tracking domains.
 
 ## Installation
+<img width="1322" height="932" alt="image" src="https://github.com/user-attachments/assets/dc395fb7-52cd-4226-ba85-754aa63dbfba" />
 
 ### Requirements
 

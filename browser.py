@@ -15,9 +15,10 @@ from PySide6.QtWidgets import (
 )
 
 from appdata import APP_NAME, AI_PROVIDERS, HOME_URL, SEARCH_ENGINES, Preferences, resolve_destination
-from dialogs import BookmarkDialog, BookmarksDialog, SetupDialog, label
+from dialogs import BookmarkDialog, BookmarksDialog, CommandDialog, SetupDialog, label
 from homepage import HomeSchemeHandler
 from theme import icon, stylesheet
+from version import DISPLAY_VERSION, RELEASE_URL, REPOSITORY_URL, VERSION
 
 TRACKER_DOMAINS = (
     "doubleclick.net", "google-analytics.com", "googletagmanager.com",
@@ -102,6 +103,7 @@ class BrowserTab(QStackedWidget):
         self.view.loadStarted.connect(self.started)
         self.view.loadProgress.connect(self.progress_changed)
         self.view.loadFinished.connect(self.finished)
+        self.view.page().loadingChanged.connect(self.loading_changed)
         for signal in (self.view.urlChanged, self.view.titleChanged, self.view.iconChanged):
             signal.connect(lambda _value: window.update_tab(self))
         self.view.page().windowCloseRequested.connect(lambda: window.close_view(self))
@@ -121,6 +123,14 @@ class BrowserTab(QStackedWidget):
         if not success and not self.cancelled and self.view.url().scheme() in ("http", "https"):
             self.setCurrentWidget(self.error_page)
         self.window.update_tab(self)
+
+    def loading_changed(self, info):
+        # Chromium reports cancelled navigation and downloads as aborted loads.
+        if info.errorCode() == -3:
+            self.cancelled = True
+            self.setCurrentWidget(self.view)
+        elif info.errorCode() and not self.cancelled:
+            self.error_text.setText(f"{info.url().host() or 'This website'} could not be reached.\nCheck your connection and try again.")
 
 
 class BrowserWindow(QMainWindow):
@@ -177,10 +187,18 @@ class BrowserWindow(QMainWindow):
         self.brand_mark.setPixmap(icon("logo", self.prefs.accent).pixmap(28, 28))
         tab_row.addWidget(self.brand_mark)
         tab_row.addWidget(label(APP_NAME, "brand"))
+        beta = QToolButton()
+        beta.setText("1.0 BETA")
+        beta.setObjectName("betaBadge")
+        beta.setToolTip("About BROWSOR " + DISPLAY_VERSION)
+        beta.clicked.connect(self.show_about)
+        tab_row.addWidget(beta)
+        tab_row.addSpacing(10)
         tab_row.addWidget(self.tabs)
         self.new_tab_button = self.tool("plus", "New tab · Ctrl+T", self.new_tab)
         tab_row.addWidget(self.new_tab_button)
         tab_row.addStretch(1)
+        tab_row.addWidget(self.tool("command", "Tabs, favorites and quick actions · Ctrl+K", self.show_commands))
         self.profile_button = self.tool("user", "Your profile and preferences", self.open_settings)
         self.profile_button.setObjectName("avatar")
         self.profile_button.setFixedSize(33, 33)
@@ -244,7 +262,7 @@ class BrowserWindow(QMainWindow):
         layout.addWidget(self.find_bar)
         layout.addWidget(self.browser_splitter, 1)
         self.setCentralWidget(root)
-        self.session_label = label("  Sign-ins saved  " if self.persistent else "  Private session  ", "help")
+        self.session_label = label("  Sign-ins saved  " if self.persistent else "  Temporary cookies  ", "help")
         self.zoom_label = label("100%", "help")
         self.statusBar().setSizeGripEnabled(False)
         self.statusBar().addPermanentWidget(self.zoom_label)
@@ -257,6 +275,7 @@ class BrowserWindow(QMainWindow):
             "Ctrl+Shift+A": self.toggle_ai_panel, "Ctrl+D": self.bookmark_current,
             "Ctrl+Shift+B": self.show_bookmarks, "Ctrl+F": self.show_find,
             "Ctrl+J": self.show_downloads, "Ctrl+,": self.open_settings,
+            "Ctrl+K": self.show_commands,
             "Ctrl++": lambda: self.change_zoom(.1), "Ctrl+=": lambda: self.change_zoom(.1),
             "Ctrl+-": lambda: self.change_zoom(-.1), "Ctrl+0": self.reset_zoom,
             "Alt+Left": lambda: self.current_view().back(), "Alt+Right": lambda: self.current_view().forward(),
@@ -273,7 +292,10 @@ class BrowserWindow(QMainWindow):
         geometry = self.settings.value("window/geometry")
         if geometry is not None:
             self.restoreGeometry(geometry)
-        self.new_tab()
+        saved_urls, active = self.prefs.saved_session()
+        for url in saved_urls or [HOME_URL.toString()]:
+            self.new_tab(url)
+        self.tabs.setCurrentIndex(active)
         self.apply_preferences()
 
     def tool(self, glyph, tooltip, callback=None):
@@ -335,7 +357,7 @@ class BrowserWindow(QMainWindow):
         self.pages.removeWidget(moved)
         self.pages.insertWidget(new, moved)
         self.pages.setCurrentIndex(self.tabs.currentIndex())
-        self.update_controls()
+        self.update_controls(force_address=True)
 
     def close_view(self, tab):
         index = self.pages.indexOf(tab)
@@ -412,7 +434,7 @@ class BrowserWindow(QMainWindow):
         self.bookmark_action.setEnabled(url.scheme() in ("http", "https"))
         self.bookmark_action.setToolTip("Edit favorite · Ctrl+D" if saved else "Save favorite · Ctrl+D")
         self.zoom_label.setText(f"{round(view.zoomFactor() * 100)}%")
-        self.setWindowTitle(f"{self.tabs.tabText(self.tabs.currentIndex())} · {APP_NAME}")
+        self.setWindowTitle(f"{self.tabs.tabText(self.tabs.currentIndex())} · {APP_NAME} {DISPLAY_VERSION}")
 
     def focus_address_bar(self):
         self.update_controls(force_address=True)
@@ -420,7 +442,10 @@ class BrowserWindow(QMainWindow):
         self.address_bar.selectAll()
 
     def navigate_to_address(self):
-        url = resolve_destination(self.address_bar.text(), SEARCH_ENGINES[self.prefs.search_engine][0])
+        self.navigate(self.address_bar.text())
+
+    def navigate(self, text):
+        url = resolve_destination(text, SEARCH_ENGINES[self.prefs.search_engine][0])
         if url is None:
             self.statusBar().showMessage("Enter a search query or a valid HTTP or HTTPS address.", 6000)
             return
@@ -452,7 +477,7 @@ class BrowserWindow(QMainWindow):
     def internal_action(self, action):
         actions = {"ai": lambda: self.toggle_ai_panel(True), "settings": self.open_settings,
                    "bookmarks": self.show_bookmarks, "add-bookmark": self.add_bookmark,
-                   "privacy": self.show_privacy}
+                   "privacy": self.show_privacy, "commands": self.show_commands, "about": self.show_about}
         if action in actions:
             actions[action]()
 
@@ -514,7 +539,61 @@ class BrowserWindow(QMainWindow):
     def show_privacy(self):
         session = ("Website cookies are saved on this computer so you can stay signed in."
                    if self.persistent else "This session keeps cookies in memory only. They are removed when you close BROWSOR.")
-        QMessageBox.information(self, "BROWSOR privacy", f"{session}\n\nYour profile, preferences, and favorites are stored locally. There is no BROWSOR cloud account or synchronization.\n\nThe tracker filter is {'on' if self.tracking_filter.enabled else 'off'}. It blocks a limited list of external tracking domains and does not provide anonymity. Websites can see your IP address.\n\nSearch queries go to {self.prefs.search_engine}. AI services process your input according to their own terms. Downloads remain on your computer.")
+        tabs = "Tab addresses are saved on exit (up to 20)." if self.prefs.flag("preferences/restore_tabs") else "Tab addresses are not saved on exit."
+        QMessageBox.information(self, "BROWSOR privacy", f"{session}\n\n{tabs} Your profile, preferences, and favorites are stored locally. There is no BROWSOR cloud account or synchronization. Switching off saved sign-ins does not erase an older persistent profile.\n\nThe tracker filter is {'on' if self.tracking_filter.enabled else 'off'}. It blocks a limited list of external tracking domains and does not provide anonymity. Websites can see your IP address.\n\nSearch queries go to {self.prefs.search_engine}. AI services process what you send according to their own terms. Page context is only copied when you ask; paste it into the assistant to share it. Downloads remain on your computer.")
+
+    def show_commands(self):
+        entries = []
+        for index in range(self.pages.count()):
+            tab = self.pages.widget(index)
+            entries.append((self.tabs.tabText(index), "Open tab · " + tab.view.url().toDisplayString(), "globe", lambda t=tab: self.tabs.setCurrentIndex(self.pages.indexOf(t))))
+        for item in self.prefs.bookmarks:
+            entries.append((item["title"], "Favorite · " + item["url"], "star", lambda u=item["url"]: self.new_tab(u)))
+        for title, detail, glyph, callback in (
+            ("New tab", "Action · Ctrl+T", "plus", self.new_tab),
+            ("Your start page", "Action · Alt+Home", "home", self.go_home),
+            ("AI space", "Action · Ctrl+Shift+A", "spark", self.toggle_ai_panel),
+            ("Manage favorites", "Action · Ctrl+Shift+B", "star", self.show_bookmarks),
+            ("Downloads", "Action · Ctrl+J", "download", self.show_downloads),
+            ("Your preferences", "Action · Ctrl+,", "sliders", self.open_settings),
+            ("Reopen closed tab", "Action · Ctrl+Shift+T", "reload", self.reopen_tab),
+            ("About BROWSOR", "Action · " + DISPLAY_VERSION, "info", self.show_about),
+        ):
+            entries.append((title, detail, glyph, callback))
+        dialog = CommandDialog(entries, self.navigate, self)
+        if dialog.exec() == QDialog.DialogCode.Accepted and dialog.result_callback:
+            callback = dialog.result_callback
+            QTimer.singleShot(0, callback)
+        dialog.deleteLater()
+
+    def show_about(self):
+        from PySide6.QtCore import qVersion
+        from PySide6.QtWebEngineCore import qWebEngineChromiumVersion
+        dialog = QDialog(self)
+        dialog.setWindowTitle("About BROWSOR")
+        dialog.setMinimumWidth(530)
+        layout = QVBoxLayout(dialog)
+        layout.setContentsMargins(32, 30, 32, 28)
+        layout.setSpacing(16)
+        mark = QLabel()
+        mark.setPixmap(icon("logo", self.prefs.accent).pixmap(56, 56))
+        layout.addWidget(mark)
+        layout.addWidget(label("Your space. For what's next.", "dialogTitle", True))
+        layout.addWidget(label("BROWSOR " + DISPLAY_VERSION, "eyebrow"))
+        layout.addWidget(label("A personal browser with a local start page and an AI workspace beside the web. This is an early beta; website compatibility is still being improved.", "muted", True))
+        layout.addWidget(label(f"Version {VERSION}\nQt {qVersion()} · Chromium {qWebEngineChromiumVersion()}", "help"))
+        row = QHBoxLayout()
+        for title, url in (("Release notes", RELEASE_URL), ("Report an issue", REPOSITORY_URL + "/issues/new")):
+            button = QPushButton(title)
+            button.clicked.connect(lambda checked=False, u=url: (dialog.accept(), self.new_tab(u)))
+            row.addWidget(button)
+        layout.addLayout(row)
+        close = QPushButton("Back to browsing")
+        close.setObjectName("primary")
+        close.clicked.connect(dialog.accept)
+        layout.addWidget(close)
+        dialog.exec()
+        dialog.deleteLater()
 
     def add_bookmark(self):
         if len(self.prefs.bookmarks) >= 100:
@@ -584,6 +663,15 @@ class BrowserWindow(QMainWindow):
         self.ai_selector.currentTextChanged.connect(self.select_ai_provider)
         head_layout.addWidget(self.ai_selector)
         head_layout.addWidget(label("A fresh perspective, right beside your page.", "help"))
+        context_row = QHBoxLayout()
+        copy = QPushButton("Copy page context")
+        copy.setIcon(icon("copy", self.prefs.accent))
+        copy.setObjectName("secondary")
+        copy.setToolTip("Copy the page title, address and selected text. Paste into your assistant to share.")
+        copy.clicked.connect(self.copy_page_context)
+        context_row.addWidget(copy, 1)
+        context_row.addWidget(self.tool("reload", "Reload your AI assistant", lambda: self.ai_view.reload() if self.ai_view else None))
+        head_layout.addLayout(context_row)
         layout.addWidget(head)
         self.ai_status = label("Your assistant is ready.", "help", True)
         self.ai_status.setContentsMargins(19, 0, 19, 12)
@@ -593,6 +681,20 @@ class BrowserWindow(QMainWindow):
         self.ai_layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.ai_container, 1)
         return panel
+
+    def copy_page_context(self):
+        view = self.current_view()
+        if view.url().scheme() not in ("http", "https"):
+            self.ai_status.setText("Open a website first, then copy its context here.")
+            return
+        text = f"Page: {view.title()}\nURL: {view.url().toString()}"
+        selection = view.page().selectedText().strip()
+        if selection:
+            text += "\n\nSelected text:\n" + selection[:12000]
+            if len(selection) > 12000:
+                text += "\n[Selection shortened to 12,000 characters]"
+        QApplication.clipboard().setText(text)
+        self.ai_status.setText("Copied. Paste into the assistant when you are ready to share.")
 
     def toggle_ai_panel(self, visible=None):
         show = not self.ai_panel.isVisible() if visible is None else visible
@@ -679,6 +781,7 @@ class BrowserWindow(QMainWindow):
         menu = QMenu(self)
         for glyph, title, key, callback in (
             ("plus", "New tab", "Ctrl+T", self.new_tab),
+            ("command", "Go anywhere", "Ctrl+K", self.show_commands),
             ("star", "Favorites", "Ctrl+Shift+B", self.show_bookmarks),
             ("download", "Downloads", "Ctrl+J", self.show_downloads),
             ("search", "Find on page", "Ctrl+F", self.show_find),
@@ -692,6 +795,8 @@ class BrowserWindow(QMainWindow):
         zoom.addAction("Reset zoom    Ctrl+0", self.reset_zoom)
         menu.addAction(icon("shield"), "About your privacy", self.show_privacy)
         menu.addAction(icon("sliders"), "Your preferences\tCtrl+,", self.open_settings)
+        menu.addSeparator()
+        menu.addAction(icon("info"), "BROWSOR " + DISPLAY_VERSION, self.show_about)
         menu.exec(self.menu_button.mapToGlobal(self.menu_button.rect().bottomRight()))
 
     def download_requested(self, download):
@@ -787,6 +892,7 @@ class BrowserWindow(QMainWindow):
             for download in active:
                 download.cancel()
         self._shutting_down = True
+        self.prefs.save_session([self.pages.widget(index).view.url().toString() for index in range(self.pages.count())], self.tabs.currentIndex())
         if not self.isFullScreen():
             self.settings.setValue("window/geometry", self.saveGeometry())
         self.settings.sync()

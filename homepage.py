@@ -10,6 +10,7 @@ from PySide6.QtWebEngineCore import QWebEngineUrlRequestJob, QWebEngineUrlScheme
 
 from appdata import Preferences, SEARCH_ENGINES
 from theme import svg
+from version import DISPLAY_VERSION
 
 TEMPLATE = (Path(__file__).parent / "assets" / "start.html").read_text(encoding="utf-8")
 
@@ -44,6 +45,7 @@ def render_home(prefs: Preferences, persistent: bool) -> str:
     }
     replacements = {
         "ACCENT": prefs.accent,
+        "VERSION": DISPLAY_VERSION,
         "DENSITY": "compact" if prefs.flag("appearance/compact") else "comfortable",
         "DATE": f"{days[now.weekday()]} {now.day} {months[now.month - 1]}",
         "GREETING": greeting,
@@ -53,7 +55,7 @@ def render_home(prefs: Preferences, persistent: bool) -> str:
         "AI_PROVIDER": prefs.ai_provider,
         "PURPOSE": purpose,
         "FILTER_STATE": "Tracker filter on" if prefs.flag("privacy/tracking", True) else "Tracker filter off",
-        "SESSION_LABEL": "Website sign-ins are saved" if persistent else "Private session · cookies are cleared on exit",
+        "SESSION_LABEL": "Website sign-ins are saved" if persistent else "Temporary cookies · cleared on exit",
     }
     tokens = {key: escape(value, quote=True) for key, value in replacements.items()}
     tokens["FAVORITES"] = "".join(favorites)

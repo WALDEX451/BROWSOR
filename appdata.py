@@ -123,3 +123,27 @@ class Preferences:
     def save_bookmarks(self, items: list[dict[str, str]]) -> None:
         self.settings.setValue("bookmarks/items", json.dumps(items, ensure_ascii=False))
         self.settings.sync()
+
+    def saved_session(self) -> tuple[list[str], int]:
+        if not self.flag("preferences/restore_tabs"):
+            return [], 0
+        try:
+            data = json.loads(self.text("session/tabs", "{}"))
+            urls = data.get("urls", [])
+            if not isinstance(urls, list):
+                return [], 0
+            safe = [value for value in urls[:20] if isinstance(value, str)
+                    and (value == HOME_URL.toString() or web_url(value) is not None)]
+            active = data.get("active", 0)
+            active = active if isinstance(active, int) else 0
+            return safe, max(0, min(active, len(safe) - 1))
+        except (ValueError, AttributeError, TypeError):
+            return [], 0
+
+    def save_session(self, urls: list[str], active: int) -> None:
+        if self.flag("preferences/restore_tabs"):
+            safe = [url for url in urls[:20] if url == HOME_URL.toString() or web_url(url) is not None]
+            self.settings.setValue("session/tabs", json.dumps({"urls": safe, "active": active}))
+        else:
+            self.settings.remove("session")
+        self.settings.sync()

@@ -7,6 +7,9 @@ from PySide6.QtGui import QIcon, QPainter, QPixmap
 from PySide6.QtSvg import QSvgRenderer
 
 PATHS = {
+    "command": '<path d="M9 7V5a2 2 0 1 0-2 2h10a2 2 0 1 0-2-2v14a2 2 0 1 0 2-2H7a2 2 0 1 0 2 2V7Z"/>',
+    "copy": '<rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V3H3v13h5"/>',
+    "info": '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7v.5"/>',
     "back": '<path d="m14 6-6 6 6 6M8 12h12"/>',
     "forward": '<path d="m10 6 6 6-6 6M4 12h12"/>',
     "reload": '<path d="M20 7v5h-5M19.1 7A8 8 0 1 0 20 16"/>',
@@ -56,7 +59,8 @@ def stylesheet(accent: str = "#c4b5fd") -> str:
     QWidget { color: #f0eff6; font-family: 'Segoe UI'; font-size: 13px; }
     QLabel { background: transparent; }
     QFrame#chrome { background: #17181f; border-bottom: 1px solid #2b2c37; }
-    QLabel#brand { font-size: 13px; font-weight: 800; letter-spacing: 2px; padding-right: 18px; }
+    QLabel#brand { font-size: 13px; font-weight: 800; letter-spacing: 2px; padding-right: 4px; }
+    QToolButton#betaBadge { color: ACCENT; background: #282431; border: 1px solid #40374e; font-size: 9px; letter-spacing: 1px; padding: 4px 7px; border-radius: 6px; }
     QLabel#muted, QLabel#help { color: #9494a7; }
     QLabel#help { font-size: 12px; }
     QLabel#eyebrow { color: ACCENT; font-size: 11px; font-weight: 700; letter-spacing: 2px; }
@@ -95,6 +99,7 @@ def stylesheet(accent: str = "#c4b5fd") -> str:
     QPushButton { background: #292a36; border: 1px solid #3a3b49; border-radius: 10px; padding: 10px 18px; font-weight: 600; }
     QPushButton:hover { background: #353642; border-color: #565467; }
     QPushButton:focus { border-color: ACCENT; }
+    QPushButton:checked { border-color: ACCENT; color: ACCENT; background: #302c3d; }
     QPushButton#primary { background: ACCENT; color: #211c30; border-color: ACCENT; }
     QPushButton#primary:hover { background: #ded2ff; }
     QPushButton#secondary { background: transparent; }

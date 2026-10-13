@@ -1,14 +1,18 @@
 """Editable local profile, first-run setup and real bookmark management."""
 
-from PySide6.QtCore import QSettings, Qt, Signal
+from pathlib import Path
+
+from PySide6.QtCore import QIODevice, QSaveFile, QSettings, Qt, Signal
+from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
-    QCheckBox, QComboBox, QDialog, QFrame, QHBoxLayout, QLabel, QLineEdit,
+    QCheckBox, QComboBox, QDialog, QFileDialog, QFrame, QHBoxLayout, QLabel, QLineEdit,
     QListWidget, QListWidgetItem, QMessageBox, QPushButton, QStackedWidget,
     QVBoxLayout, QWidget,
 )
 
 from appdata import ACCENTS, AI_PROVIDERS, LEGACY_ACCENTS, PURPOSES, SEARCH_ENGINES, Preferences, web_url
 from theme import icon
+from bookmarks import MAX_IMPORT_BYTES, merge_bookmarks, read_bookmarks, write_bookmarks
 
 
 def label(text: str, name: str = "", wrap: bool = False) -> QLabel:
@@ -102,6 +106,10 @@ class SetupDialog(QDialog):
         self.compact = QCheckBox("Use a more compact start page")
         self.compact.setChecked(prefs.flag("appearance/compact"))
         layout.addWidget(self.compact)
+        self.restore_tabs = QCheckBox("Continue with my tabs the next time I open BROWSOR")
+        self.restore_tabs.setChecked(prefs.flag("preferences/restore_tabs"))
+        layout.addWidget(self.restore_tabs)
+        layout.addWidget(label("Saves up to 20 tab addresses locally when you close the app. Off by default.", "help", True))
         layout.addStretch()
         self.stack.addWidget(workspace)
 
@@ -164,7 +172,6 @@ class SetupDialog(QDialog):
         self.step_label.setText(f"{index + 1} / 3" if self.first_run else "Local profile")
         for i, button in enumerate(self.sections):
             button.setChecked(i == index)
-            button.setStyleSheet(f"background: {'#3a314c' if i == index else '#1c1d26'}; color: {'#e7dcfc' if i == index else '#9491a5'};")
         self.back.setEnabled(not self.first_run or index > 0)
         self.next.setText("Start BROWSOR" if self.first_run and index == 2 else "Continue" if self.first_run else "Save preferences")
 
@@ -185,6 +192,7 @@ class SetupDialog(QDialog):
             "preferences/search_engine": self.search.currentText(),
             "preferences/ai_provider": self.ai.currentText(),
             "preferences/open_ai": self.open_ai.isChecked(),
+            "preferences/restore_tabs": self.restore_tabs.isChecked(),
             "appearance/accent": self.accent.currentText(),
             "appearance/compact": self.compact.isChecked(),
             "privacy/tracking": self.tracking.isChecked(),
@@ -193,6 +201,8 @@ class SetupDialog(QDialog):
         }
         for key, value in values.items():
             self.prefs.settings.setValue(key, value)
+        if not self.restore_tabs.isChecked():
+            self.prefs.settings.remove("session")
         self.prefs.settings.sync()
         if self.prefs.settings.status() != QSettings.Status.NoError:
             QMessageBox.warning(self, "Couldn't save preferences", "Your preferences could not be saved. Check that BROWSOR can write to your user folder.")
@@ -251,7 +261,7 @@ class BookmarksDialog(QDialog):
         super().__init__(parent)
         self.prefs = prefs
         self.setWindowTitle("Your favorites")
-        self.resize(600, 560)
+        self.resize(650, 620)
         root = QVBoxLayout(self)
         root.setContentsMargins(28, 26, 28, 24)
         root.setSpacing(12)
@@ -269,6 +279,16 @@ class BookmarksDialog(QDialog):
             row.addWidget(button)
             self.actions.append(button)
         root.addLayout(row)
+        transfer = QHBoxLayout()
+        for title, callback in (("Import favorites…", self.import_bookmarks), ("Export favorites…", self.export_bookmarks)):
+            button = QPushButton(title)
+            button.setObjectName("secondary")
+            button.clicked.connect(callback)
+            transfer.addWidget(button)
+        transfer.addStretch()
+        root.addLayout(transfer)
+        self.transfer_status = label("Up to 100 favorites. HTML files work with other browsers.", "help", True)
+        root.addWidget(self.transfer_status)
         close = QPushButton("Done")
         close.setObjectName("primary")
         close.clicked.connect(self.accept)
@@ -333,4 +353,91 @@ class BookmarksDialog(QDialog):
         row = self.list.currentRow()
         if row >= 0:
             self.open_requested.emit(self.prefs.bookmarks[row]["url"])
+            self.accept()
+
+    def import_bookmarks(self):
+        filename, _ = QFileDialog.getOpenFileName(self, "Import favorites", "", "Bookmark files (*.html *.htm *.json)")
+        if not filename:
+            return
+        try:
+            with Path(filename).open("rb") as source:
+                content = source.read(MAX_IMPORT_BYTES + 1)
+            incoming = read_bookmarks(content, Path(filename).suffix.lower() in (".html", ".htm"))
+            items, added, skipped = merge_bookmarks(self.prefs.bookmarks, incoming)
+            self.commit(items)
+            self.transfer_status.setText(f"Imported {added} favorites. Skipped {skipped} duplicates, unsupported entries, or entries above the 100-favorite limit.")
+        except (OSError, ValueError) as error:
+            QMessageBox.warning(self, "Couldn't import favorites", str(error))
+
+    def export_bookmarks(self):
+        filename, selected = QFileDialog.getSaveFileName(self, "Export favorites", "BROWSOR-favorites.html", "Browser bookmarks (*.html);;BROWSOR bookmarks (*.json)")
+        if not filename:
+            return
+        if not Path(filename).suffix:
+            filename += ".json" if "json" in selected else ".html"
+        data = write_bookmarks(self.prefs.bookmarks, Path(filename).suffix.lower() != ".json")
+        output = QSaveFile(filename)
+        if not output.open(QIODevice.OpenModeFlag.WriteOnly):
+            QMessageBox.warning(self, "Couldn't export favorites", output.errorString())
+            return
+        if output.write(data) != len(data):
+            output.cancelWriting()
+            QMessageBox.warning(self, "Couldn't export favorites", output.errorString())
+            return
+        if not output.commit():
+            QMessageBox.warning(self, "Couldn't export favorites", output.errorString())
+            return
+        self.transfer_status.setText(f"Exported {len(self.prefs.bookmarks)} favorites to {Path(filename).name}.")
+
+
+class CommandDialog(QDialog):
+    """Keyboard-first access to existing tabs, favorites and browser actions."""
+
+    def __init__(self, entries, navigate, parent=None):
+        super().__init__(parent)
+        self.entries, self.navigate = entries, navigate
+        self.result_callback = None
+        self.setWindowTitle("Go anywhere · BROWSOR")
+        self.resize(640, 500)
+        root = QVBoxLayout(self)
+        root.setContentsMargins(24, 24, 24, 20)
+        root.setSpacing(14)
+        root.addWidget(label("A shortcut to everything.", "dialogTitle"))
+        self.query = QLineEdit()
+        self.query.setPlaceholderText("Find a tab, favorite, action, or search the web…")
+        self.query.setAccessibleName("Search tabs, favorites and actions")
+        self.query.setClearButtonEnabled(True)
+        root.addWidget(self.query)
+        self.results = QListWidget()
+        self.results.setAccessibleName("Matching destinations and actions")
+        self.results.itemActivated.connect(lambda _: self.choose())
+        root.addWidget(self.results, 1)
+        root.addWidget(label("↑ ↓ to move     Enter to open     Esc to close  ·  Suggestions stay on this computer", "help", True))
+        self.query.textChanged.connect(self.refresh)
+        self.query.returnPressed.connect(self.choose)
+        for key, direction in (("Down", 1), ("Up", -1)):
+            shortcut = QShortcut(QKeySequence(key), self.query)
+            shortcut.setContext(Qt.ShortcutContext.WidgetShortcut)
+            shortcut.activated.connect(lambda d=direction: self.results.setCurrentRow((self.results.currentRow() + d) % max(1, self.results.count())))
+        self.refresh()
+        self.query.setFocus()
+
+    def refresh(self):
+        self.results.clear()
+        self.callbacks = []
+        query = self.query.text().strip()
+        words = query.casefold().split()
+        matches = [entry for entry in self.entries if all(word in (entry[0] + " " + entry[1]).casefold() for word in words)]
+        if query:
+            matches.append((f"Open or search: {query}", "Web · your selected search engine", "search", lambda: self.navigate(query)))
+        for title, detail, glyph, callback in matches[:60]:
+            item = QListWidgetItem(icon(glyph), f"{title}\n{detail}")
+            self.results.addItem(item)
+            self.callbacks.append(callback)
+        self.results.setCurrentRow(0)
+
+    def choose(self):
+        row = self.results.currentRow()
+        if 0 <= row < len(self.callbacks):
+            self.result_callback = self.callbacks[row]
             self.accept()

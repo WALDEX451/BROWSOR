@@ -6,6 +6,7 @@ The second design iteration of BROWSOR, published as the first beta of 1.0.
 
 ### New
 
+- Native installation downloads: Windows setup EXE, macOS Apple Silicon DMG and macOS Intel DMG. The existing portable Windows ZIP remains available.
 - A complete Windows x64 portable package, including the start page and icons.
 - A visible beta badge, About dialog, engine versions and links to release notes and issues.
 - **Go anywhere** (`Ctrl+K`): search your open tabs, favorites and browser actions. Enter a new address or search query from the same dialog.
@@ -24,8 +25,9 @@ The second design iteration of BROWSOR, published as the first beta of 1.0.
 
 ### Beta limitations
 
-- Windows x64 is the packaged target. Other platforms are source-only and have not been validated for this release.
+- Packaged targets are Windows x64 and macOS 13+ on Apple Silicon or Intel. Installer startup checks cover opening the app and loading its local start page; they are not a full browser compatibility audit.
 - This build is unsigned and has no automatic updater. Windows may show an unknown-publisher warning.
+- Mac applications are ad-hoc signed but not Apple Developer ID signed or notarized; macOS may require explicit approval for the downloaded app.
 - Some Google, Apple or AI service sign-in flows reject embedded browsers. BROWSOR does not bypass provider restrictions.
 - No BROWSOR cloud account, cross-device synchronization, extension store or password manager.
 - The tracker filter uses a small fixed domain list. It does not block all tracking.

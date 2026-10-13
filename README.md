@@ -4,20 +4,35 @@
 
 A personal desktop browser with a calm start page, local preferences and an AI workspace beside the web. Built with Python, PySide6 and Qt WebEngine.
 
-[Download the Windows beta](https://github.com/WALDEX451/BROWSOR/releases/tag/v1.0.0-beta.1) · [What's new](CHANGELOG.md) · [Report an issue](https://github.com/WALDEX451/BROWSOR/issues)
+[Download the beta for Windows or macOS](https://github.com/WALDEX451/BROWSOR/releases/tag/v1.0.0-beta.1) · [What's new](CHANGELOG.md) · [Report an issue](https://github.com/WALDEX451/BROWSOR/issues)
 
 ![BROWSOR 1.0 beta — the personal start page](assets/preview.png)
 
 ## Get started on Windows
 
-1. Download **BROWSOR-1.0.0-beta.1-windows-x64.zip** from the release page.
-2. Extract the entire ZIP into a folder you can write to. Keep `BROWSOR.exe` and `_internal` together.
-3. Open **BROWSOR.exe**. Python is included; no separate Python installation is needed.
+1. Download **BROWSOR-1.0.0-beta.1-windows-x64-setup.exe** from the release page.
+2. Run the installer. It installs for your Windows account and creates a Start menu shortcut; a desktop shortcut is optional.
+3. Open **BROWSOR Beta**. Python is included; no separate Python installation is needed.
 4. Choose your name, browsing purpose, search engine, AI assistant, accent color and what BROWSOR remembers.
+
+Prefer a portable folder? The original **windows-x64.zip** is also available. Extract the entire ZIP and keep `BROWSOR.exe` and `_internal` together.
 
 Setup is shown until you save it, then remembered. Reopen your preferences anytime with **Ctrl+,**. Website sign-in storage changes take effect after restarting.
 
 This is **1.0.0-beta.1**, the second design iteration and first public 1.0 beta. The Windows executable is unsigned, so Windows may show an unknown-publisher warning. There is no automatic updater. See [beta limitations](CHANGELOG.md#beta-limitations) before relying on it as your everyday browser.
+
+## Get started on macOS
+
+Requires macOS 13 or later. Choose the file that matches your Mac:
+
+| Mac | Download |
+| --- | --- |
+| Apple Silicon (M1, M2, M3, M4 and later) | `BROWSOR-1.0.0-beta.1-macos-arm64.dmg` |
+| Intel | `BROWSOR-1.0.0-beta.1-macos-x86_64.dmg` |
+
+Open the DMG, drag **BROWSOR.app** to **Applications**, then open BROWSOR from Applications. Python and Qt are included. The Mac builds use an ad-hoc signature; they are **not Apple Developer ID signed or notarized**. macOS may block the first launch. After trying to open the downloaded app, review **System Settings → Privacy & Security → Open Anyway** if you trust that copy. Do not disable Gatekeeper.
+
+The download page includes `INSTALLERS-SHA256SUMS.txt` for the EXE and both DMGs. The older `SHA256SUMS.txt` covers the portable ZIP. See [installer details](INSTALLERS.md) for provenance and startup checks.
 
 ## A connected workspace
 
@@ -76,6 +91,10 @@ The start page and icons under `assets/` are required. Run `python main.py --ver
 ```
 
 The build produces a folder, ZIP and `SHA256SUMS.txt` in `dist/`. It bundles dynamic Qt libraries, WebEngine resources, a Windows icon, version metadata and dependency notices. It does not sign the executable. Use a clean environment with 64-bit Python; build outputs are ignored by Git.
+
+To make the installation EXE, compile `scripts/windows-installer.iss` with Inno Setup 6 or later and pass `/DSourceRoot=` followed by this checkout's absolute path. For macOS, run `python scripts/build_macos.py` **on a Mac**, using Python 3.12 and `requirements-build.txt`; it produces a DMG for the machine's native architecture.
+
+The GitHub **Build beta installers** workflow builds on Windows, Apple Silicon and Intel Mac runners, checks packaged startup, and adds assets to the existing beta without moving its tag. A separate **Check published installer startup** workflow can check the published downloads again.
 
 For a downloaded ZIP, compare its hash with the release's `SHA256SUMS.txt`:
 

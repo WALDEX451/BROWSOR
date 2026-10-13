@@ -1,0 +1,51 @@
+name: Check published installer startup
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  startup:
+    name: Check ${{ matrix.platform }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15
+            platform: Apple-Silicon
+            package: BROWSOR-1.0.0-beta.1-macos-arm64.dmg
+          - runner: macos-15-intel
+            platform: Intel-Mac
+            package: BROWSOR-1.0.0-beta.1-macos-x86_64.dmg
+          - runner: windows-2025
+            platform: Windows
+            package: BROWSOR-1.0.0-beta.1-windows-x64-setup.exe
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12.10'
+      - name: Download the published installer
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PACKAGE_NAME: ${{ matrix.package }}
+        shell: bash
+        run: gh release download v1.0.0-beta.1 --repo WALDEX451/BROWSOR --pattern "$PACKAGE_NAME" --dir downloads
+      - name: Start the packaged app and check the local start page
+        env:
+          PACKAGE_NAME: ${{ matrix.package }}
+        shell: bash
+        run: python scripts/check_installer_startup.py "downloads/$PACKAGE_NAME"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: startup-${{ matrix.platform }}
+          path: startup-report/
+          if-no-files-found: warn
+          retention-days: 7

@@ -1,3 +1,10 @@
+# 2.0.0-beta.2 — Apple-style workspace
+
+- Apple-inspired light interface with translucent surfaces, system-blue accents and rounded quick-action cards.
+- New Reader mode for websites, available from the toolbar, command menu and `Ctrl+Shift+R`.
+- Updated public preview screenshot and release documentation.
+- Windows and macOS packages are built and startup-tested in GitHub Actions.
+
 # 2.0.0-beta.1 — Design beta
 
 - New neutral charcoal desktop chrome and mint default for new profiles.

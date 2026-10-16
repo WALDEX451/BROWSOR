@@ -95,7 +95,7 @@ class Preferences:
 
     @property
     def accent(self) -> str:
-        value = self.text("appearance/accent", "Mint")
+        value = self.text("appearance/accent", "Blue")
         value = LEGACY_ACCENTS.get(value, value)
         return ACCENTS.get(value, ACCENTS["Lavender"])
 

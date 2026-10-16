@@ -27,6 +27,67 @@ TRACKER_DOMAINS = (
     "scorecardresearch.com",
 )
 
+READER_ENTER_JS = r"""
+(() => {
+    if (window.__browsorReaderMode) return true;
+    const source = document.querySelector('article, main, [role="main"]') || document.body;
+    const clone = source.cloneNode(true);
+    clone.querySelectorAll('script, style, nav, aside, header, footer, form, iframe, button').forEach(node => node.remove());
+    window.__browsorReaderOriginal = document.documentElement.innerHTML;
+    const title = document.title || 'Reader view';
+    document.documentElement.innerHTML = '';
+    const head = document.createElement('head');
+    const meta = document.createElement('meta');
+    meta.name = 'viewport';
+    meta.content = 'width=device-width, initial-scale=1';
+    head.append(meta);
+    const style = document.createElement('style');
+    style.textContent = `
+        :root { color-scheme: light; background: #f5f5f7; }
+        body { margin: 0; padding: 64px 24px 90px; background: #f5f5f7; color: #1d1d1f; font: 18px/1.72 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif; }
+        .browsor-reader-shell { max-width: 760px; margin: 0 auto; }
+        .browsor-reader-kicker { color: #007aff; font-size: 12px; font-weight: 700; letter-spacing: 1.7px; text-transform: uppercase; margin: 0 0 16px; }
+        .browsor-reader-title { font: 700 clamp(34px, 6vw, 58px)/1.08 -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif; letter-spacing: -2px; margin: 0 0 36px; }
+        article { background: rgba(255,255,255,.82); border: 1px solid rgba(0,0,0,.08); border-radius: 22px; box-shadow: 0 15px 50px rgba(0,0,0,.07); padding: clamp(24px, 5vw, 56px); }
+        article img, article video { max-width: 100%; height: auto; border-radius: 12px; }
+        article a { color: #007aff; }
+        article h1, article h2, article h3 { line-height: 1.2; letter-spacing: -.7px; }
+        article blockquote { border-left: 3px solid #007aff; margin-left: 0; padding-left: 20px; color: #6e6e73; }
+        article pre { overflow: auto; padding: 16px; border-radius: 12px; background: #1d1d1f; color: #fff; font-size: 14px; }
+        @media (max-width: 600px) { body { padding: 34px 14px 60px; font-size: 17px; } article { padding: 24px 20px; } }
+    `;
+    head.append(style);
+    document.head.replaceWith(head);
+    const body = document.createElement('body');
+    const shell = document.createElement('main');
+    shell.className = 'browsor-reader-shell';
+    const kicker = document.createElement('p');
+    kicker.className = 'browsor-reader-kicker';
+    kicker.textContent = 'BROWSOR Reader';
+    const heading = document.createElement('h1');
+    heading.className = 'browsor-reader-title';
+    heading.textContent = title;
+    const article = document.createElement('article');
+    article.innerHTML = clone.innerHTML;
+    shell.append(kicker, heading, article);
+    body.append(shell);
+    document.body.replaceWith(body);
+    document.title = title + ' · Reader';
+    window.__browsorReaderMode = true;
+    return true;
+})()
+"""
+
+READER_EXIT_JS = r"""
+(() => {
+    if (!window.__browsorReaderMode || !window.__browsorReaderOriginal) return false;
+    document.documentElement.innerHTML = window.__browsorReaderOriginal;
+    window.__browsorReaderMode = false;
+    window.__browsorReaderOriginal = null;
+    return true;
+})()
+"""
+
 
 def is_home(url: QUrl) -> bool:
     return url.scheme() == "browsor" and url.host() == "home"
@@ -78,6 +139,7 @@ class BrowserTab(QStackedWidget):
     def __init__(self, window):
         super().__init__()
         self.window = window
+        self.reader_mode = False
         self.loading, self.cancelled, self.progress = False, False, 0
         self.view = window.make_web_view(self)
         self.addWidget(self.view)
@@ -118,6 +180,7 @@ class BrowserTab(QStackedWidget):
 
     def started(self):
         self.loading, self.cancelled, self.progress = True, False, 0
+        self.reader_mode = False
         self.setCurrentWidget(self.view)
         self.window.update_tab(self)
 
@@ -237,6 +300,12 @@ class BrowserWindow(QMainWindow):
         self.privacy_button = self.tool("shield", "Tracker filter", self.toggle_tracking)
         self.privacy_button.setCheckable(True)
         toolbar.addWidget(self.privacy_button)
+        self.reader_button = self.tool("book", "Reader mode · Ctrl+Shift+R", self.toggle_reader_mode)
+        self.reader_button.setText("Reader")
+        self.reader_button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        self.reader_button.setFixedSize(84, 34)
+        self.reader_button.setCheckable(True)
+        toolbar.addWidget(self.reader_button)
         self.ai_button = self.tool("spark", "AI beside your page · Ctrl+Shift+A", self.toggle_ai_panel)
         self.ai_button.setText("AI space")
         self.ai_button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
@@ -282,7 +351,7 @@ class BrowserWindow(QMainWindow):
             "Ctrl+R": self.reload_current, "F5": self.reload_current,
             "Ctrl+Shift+A": self.toggle_ai_panel, "Ctrl+D": self.bookmark_current,
             "Ctrl+Shift+B": self.show_bookmarks, "Ctrl+F": self.show_find,
-            "Ctrl+J": self.show_downloads, "Ctrl+,": self.open_settings,
+            "Ctrl+J": self.show_downloads, "Ctrl+Shift+F": self.toggle_fullscreen, "Ctrl+Shift+R": self.toggle_reader_mode, "Ctrl+,": self.open_settings,
             "Ctrl+K": self.show_commands,
             "Ctrl++": lambda: self.change_zoom(.1), "Ctrl+=": lambda: self.change_zoom(.1),
             "Ctrl+-": lambda: self.change_zoom(-.1), "Ctrl+0": self.reset_zoom,
@@ -441,6 +510,8 @@ class BrowserWindow(QMainWindow):
         self.bookmark_action.setIcon(icon("star-filled" if saved else "star", self.prefs.accent if saved else "#9792a7"))
         self.bookmark_action.setEnabled(url.scheme() in ("http", "https"))
         self.bookmark_action.setToolTip("Edit favorite · Ctrl+D" if saved else "Save favorite · Ctrl+D")
+        self.reader_button.setEnabled(url.scheme() in ("http", "https"))
+        self.reader_button.setChecked(tab.reader_mode)
         self.zoom_label.setText(f"{round(view.zoomFactor() * 100)}%")
         self.setWindowTitle(f"{self.tabs.tabText(self.tabs.currentIndex())} · {APP_NAME} {DISPLAY_VERSION}")
 
@@ -483,9 +554,11 @@ class BrowserWindow(QMainWindow):
         request.openIn(tab.view.page())
 
     def internal_action(self, action):
-        actions = {"ai": lambda: self.toggle_ai_panel(True), "settings": self.open_settings,
+        actions = {"ai": lambda: self.toggle_ai_panel(True), "reader": self.toggle_reader_mode,
+                   "settings": self.open_settings,
                    "bookmarks": self.show_bookmarks, "add-bookmark": self.add_bookmark,
-                   "privacy": self.show_privacy, "commands": self.show_commands, "about": self.show_about}
+                   "privacy": self.show_privacy, "commands": self.show_commands, "downloads": self.show_downloads,
+                   "focus": self.toggle_fullscreen, "about": self.show_about}
         if action in actions:
             actions[action]()
 
@@ -544,6 +617,21 @@ class BrowserWindow(QMainWindow):
         self.apply_preferences()
         self.statusBar().showMessage(f"Tracker filter {'on' if enabled else 'off'}. Reload an open website to apply the change.", 7000)
 
+    def toggle_reader_mode(self):
+        tab = self.current_tab()
+        if tab is None or tab.view.url().scheme() not in ("http", "https"):
+            self.statusBar().showMessage("Reader mode is available on websites.", 5000)
+            return
+        entering = not tab.reader_mode
+        script = READER_ENTER_JS if entering else READER_EXIT_JS
+        tab.view.page().runJavaScript(script, lambda _result: self.reader_finished(tab, entering))
+
+    def reader_finished(self, tab, enabled):
+        if tab is self.current_tab() and not self._shutting_down:
+            tab.reader_mode = enabled
+            self.reader_button.setChecked(enabled)
+            self.statusBar().showMessage("Reader mode on · Ctrl+Shift+R to return" if enabled else "Reader mode off", 5000)
+
     def show_privacy(self):
         session = ("Website cookies are saved on this computer so you can stay signed in."
                    if self.persistent else "This session keeps cookies in memory only. They are removed when you close BROWSOR.")
@@ -561,6 +649,7 @@ class BrowserWindow(QMainWindow):
             ("New tab", "Action · Ctrl+T", "plus", self.new_tab),
             ("Your start page", "Action · Alt+Home", "home", self.go_home),
             ("AI space", "Action · Ctrl+Shift+A", "spark", self.toggle_ai_panel),
+            ("Reader mode", "Action · Ctrl+Shift+R", "book", self.toggle_reader_mode),
             ("Manage favorites", "Action · Ctrl+Shift+B", "star", self.show_bookmarks),
             ("Downloads", "Action · Ctrl+J", "download", self.show_downloads),
             ("Your preferences", "Action · Ctrl+,", "sliders", self.open_settings),
@@ -793,6 +882,7 @@ class BrowserWindow(QMainWindow):
             ("star", "Favorites", "Ctrl+Shift+B", self.show_bookmarks),
             ("download", "Downloads", "Ctrl+J", self.show_downloads),
             ("search", "Find on page", "Ctrl+F", self.show_find),
+            ("book", "Reader mode", "Ctrl+Shift+R", self.toggle_reader_mode),
         ):
             action = menu.addAction(icon(glyph), f"{title}\t{key}")
             action.triggered.connect(callback)

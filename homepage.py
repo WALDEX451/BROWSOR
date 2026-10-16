@@ -63,6 +63,8 @@ def render_home(prefs: Preferences, persistent: bool) -> str:
         ("HERO_ICON", "spark", 36), ("SEARCH_ICON", "search", 21), ("ARROW_ICON", "forward", 20),
         ("SMALL_ARROW", "forward", 15), ("TINY_ARROW", "forward", 12), ("PLUS_ICON", "plus", 23),
         ("SPARK_ICON", "spark", 16), ("SLIDERS_ICON", "sliders", 16), ("SHIELD_ICON", "shield", 13),
+        ("DOWNLOAD_ICON", "download", 16),
+        ("BOOK_ICON", "book", 16),
     ):
         tokens[key] = svg(name, size=size)
     # Single pass prevents a user-entered token from being interpreted as markup.

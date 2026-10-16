@@ -62,7 +62,7 @@ def main():
     resources = bundle / "Contents" / "Resources"
     with (bundle / "Contents" / "Info.plist").open("rb") as file:
         info = plistlib.load(file)
-    info.update({"CFBundleDisplayName": "BROWSOR", "CFBundleShortVersionString": "2.0.0", "CFBundleVersion": "2.0.0.1",
+    info.update({"CFBundleDisplayName": "BROWSOR", "CFBundleShortVersionString": VERSION.split("-", 1)[0], "CFBundleVersion": VERSION.replace(".", ""),
                  "LSMinimumSystemVersion": "13.0", "NSHighResolutionCapable": True,
                  "NSHumanReadableCopyright": "BROWSOR " + VERSION + " · Third-party notices are included in Resources/LICENSES."})
     with (bundle / "Contents" / "Info.plist").open("wb") as file:

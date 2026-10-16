@@ -45,7 +45,7 @@ def main():
     mark = QImage(1024, 1024, QImage.Format.Format_ARGB32)
     mark.fill(Qt.GlobalColor.transparent)
     painter = QPainter(mark)
-    QSvgRenderer(QByteArray(svg("logo", "#c4b5fd", 1024).encode())).render(painter)
+    QSvgRenderer(QByteArray(svg("logo", "#99e2c5", 1024).encode())).render(painter)
     painter.end()
     mark.save(str(build / "mac-icon.png"))
     with Image.open(build / "mac-icon.png") as image:
@@ -62,7 +62,7 @@ def main():
     resources = bundle / "Contents" / "Resources"
     with (bundle / "Contents" / "Info.plist").open("rb") as file:
         info = plistlib.load(file)
-    info.update({"CFBundleDisplayName": "BROWSOR", "CFBundleShortVersionString": "1.0.0", "CFBundleVersion": "1.0.0.1",
+    info.update({"CFBundleDisplayName": "BROWSOR", "CFBundleShortVersionString": "2.0.0", "CFBundleVersion": "2.0.0.1",
                  "LSMinimumSystemVersion": "13.0", "NSHighResolutionCapable": True,
                  "NSHumanReadableCopyright": "BROWSOR " + VERSION + " · Third-party notices are included in Resources/LICENSES."})
     with (bundle / "Contents" / "Info.plist").open("wb") as file:
@@ -119,7 +119,7 @@ Licenses and build information: BROWSOR.app/Contents/Resources/
         shutil.copytree(bundle, staging / "BROWSOR.app", symlinks=True)
         (staging / "Applications").symlink_to("/Applications", target_is_directory=True)
         (staging / "READ ME.txt").write_text(instructions, encoding="utf-8")
-        subprocess.run(["hdiutil", "create", "-ov", "-volname", "BROWSOR 1.0 beta", "-srcfolder", str(staging),
+        subprocess.run(["hdiutil", "create", "-ov", "-volname", "BROWSOR 2.0", "-srcfolder", str(staging),
                         "-fs", "HFS+", "-format", "UDZO", str(dmg)], check=True)
     subprocess.run(["hdiutil", "verify", str(dmg)], check=True)
     with dmg.open("rb") as file:

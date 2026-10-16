@@ -1,3 +1,13 @@
+# 2.0.0-beta.1 — Design beta
+
+- New neutral charcoal desktop chrome and mint default for new profiles.
+- Completely redesigned ivory start page with sage and terracotta landscape artwork, labeled workspace sidebar, editorial typography, favorites and AI entry points.
+- Responsive layouts and reduced-motion support; no remote artwork or fonts.
+- Real-app preview and desktop/small-window layout smoke checks.
+- Fixed local start-page search submissions; DuckDuckGo form and address-bar searches are checked against real result pages.
+- Windows setup EXE and portable ZIP; this beta is unsigned and has no automatic updater.
+- macOS 2.0 packages have not been built.
+
 # Changelog
 
 ## 1.0.0-beta.1

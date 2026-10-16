@@ -1,4 +1,4 @@
-# BROWSOR · 1.0 beta
+# BROWSOR · 2.0 beta 1
 
 **Your space. For what's next.**
 
@@ -6,7 +6,13 @@ A personal desktop browser with a calm start page, local preferences and an AI w
 
 [Download the beta for Windows or macOS](https://github.com/WALDEX451/BROWSOR/releases/tag/v1.0.0-beta.1) · [What's new](CHANGELOG.md) · [Report an issue](https://github.com/WALDEX451/BROWSOR/issues)
 
-![BROWSOR 1.0 beta — the personal start page](assets/preview.png)
+![BROWSOR 2.0 — the redesigned personal start page](assets/preview-v2.png)
+
+## Try version 2.0 from source
+
+Version 2.0 introduces a warm editorial start page: an ivory canvas, sage and terracotta artwork, a labeled workspace sidebar, oversized typography and responsive favorite shortcuts. The native browser chrome uses a quiet charcoal palette. Existing profiles retain their accent preference; choose Mint in settings for the appearance shown above.
+
+Run `pip install -r requirements.txt`, then `python main.py`. To regenerate the real-app preview and run layout/tab smoke checks on Windows, run `python scripts/preview_v2.py`. Local Windows packages are in `dist/`: `BROWSOR-2.0.0-beta.1-windows-x64-setup.exe` and `BROWSOR-2.0.0-beta.1-windows-x64.zip`. The setup installs for the current user. The executable is unsigned and this beta has no automatic updater. DuckDuckGo is the default search engine, with live smoke checks in `python scripts/check_duckduckgo.py`. These packages are not yet published on GitHub. The download instructions below refer to the previous 1.0 beta release.
 
 ## Get started on Windows
 
@@ -63,7 +69,7 @@ The download page includes `INSTALLERS-SHA256SUMS.txt` for the EXE and both DMGs
 
 ## Accounts and local storage
 
-BROWSOR has a **local profile**, not a cloud account. It does not provide its own Google/Apple login or synchronization. Sign in on the website of the service you use. Some providers reject embedded-browser sign-ins; those restrictions are not bypassed.
+BROWSOR has a **local account**, not a cloud account. On first launch, the account setup lets you choose your name, browsing purpose and start-page message. The other two setup pages control search, AI, tab restoration, start-page density, accent color, tracker protection and saved website sign-ins. Open **Ctrl+,** whenever you want to change any of these settings. It does not provide its own Google/Apple login or synchronization. Sign in on the website of the service you use. Some providers reject embedded-browser sign-ins; those restrictions are not bypassed.
 
 By default, website cookies and the HTTP cache stay in memory. Enable **Stay signed in to websites** to save website data in the Qt profile. The choice takes effect after a restart. Turning it off starts a temporary session but does not delete an older saved profile.
 

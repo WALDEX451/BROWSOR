@@ -13,7 +13,23 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from version import VERSION
+from version import VERSION, DISPLAY_VERSION
+
+
+def copy_licenses(source: Path, destination: Path) -> None:
+    """Copy notices without Windows path-length failures in installer folders."""
+    destination.mkdir(parents=True, exist_ok=True)
+    manifest = []
+    for item in sorted(source.rglob("*")):
+        if not item.is_file():
+            continue
+        digest = hashlib.sha256(str(item.relative_to(source)).encode("utf-8")).hexdigest()[:10]
+        suffix = item.suffix or ".txt"
+        safe_stem = "".join(character if character.isalnum() else "-" for character in item.stem)[:52].strip("-")
+        target_name = f"{safe_stem or 'notice'}-{digest}{suffix}"
+        shutil.copy2(item, destination / target_name)
+        manifest.append(f"{target_name}  {item.relative_to(source).as_posix()}\n")
+    (destination / "MANIFEST.txt").write_text("".join(manifest), encoding="utf-8")
 
 
 def main():
@@ -34,23 +50,33 @@ def main():
     mark = QImage(256, 256, QImage.Format.Format_ARGB32)
     mark.fill(Qt.GlobalColor.transparent)
     painter = QPainter(mark)
-    QSvgRenderer(QByteArray(svg("logo", "#c4b5fd", 256).encode())).render(painter)
+    QSvgRenderer(QByteArray(svg("logo", "#99e2c5", 256).encode())).render(painter)
     painter.end()
     mark.save(str(build / "icon.png"))
     with Image.open(build / "icon.png") as source:
         source.save(build / "BROWSOR.ico", sizes=[(16, 16), (24, 24), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)])
-    version_info = """VSVersionInfo(ffi=FixedFileInfo(filevers=(1,0,0,1), prodvers=(1,0,0,1), mask=0x3f, flags=0x2, OS=0x40004, fileType=0x1, subtype=0, date=(0,0)), kids=[StringFileInfo([StringTable('040904B0', [StringStruct('FileDescription','BROWSOR 1.0 beta 1'),StringStruct('FileVersion','VERSION'),StringStruct('ProductName','BROWSOR'),StringStruct('ProductVersion','VERSION'),StringStruct('OriginalFilename','BROWSOR.exe')])]),VarFileInfo([VarStruct('Translation',[1033,1200])])])"""
-    (build / "version.txt").write_text(version_info.replace("VERSION", VERSION), encoding="utf-8")
+    version_info = """VSVersionInfo(ffi=FixedFileInfo(filevers=(2,0,0,1), prodvers=(2,0,0,1), mask=0x3f, flags=0x2, OS=0x40004, fileType=0x1, subtype=0, date=(0,0)), kids=[StringFileInfo([StringTable('040904B0', [StringStruct('FileDescription','BROWSOR DISPLAY_VERSION'),StringStruct('FileVersion','VERSION'),StringStruct('ProductName','BROWSOR'),StringStruct('ProductVersion','VERSION'),StringStruct('OriginalFilename','BROWSOR.exe')])]),VarFileInfo([VarStruct('Translation',[1033,1200])])])"""
+    (build / "version.txt").write_text(version_info.replace("DISPLAY_VERSION", DISPLAY_VERSION).replace("VERSION", VERSION), encoding="utf-8")
     command = [sys.executable, "-m", "PyInstaller", "--noconfirm", "--clean", "--windowed", "--onedir", "--name", "BROWSOR",
                "--icon", str(build / "BROWSOR.ico"), "--version-file", str(build / "version.txt"),
                "--add-data", "assets/start.html:assets", "--add-data", "assets/check.svg:assets", "--add-data", "assets/chevron.svg:assets",
                "--additional-hooks-dir", str(ROOT / "scripts" / "hooks"),
                "--exclude-module", "tkinter", "--exclude-module", "matplotlib", "--exclude-module", "numpy", "main.py"]
-    subprocess.run(command, check=True)
+    # PyInstaller discovers DLLs through PATH. Keep unrelated workstation
+    # runtimes (Poppler, libheif and other Qt installs) out of this bundle.
+    windows_root = Path(os.environ.get("WINDIR", r"C:\Windows"))
+    build_env = os.environ.copy()
+    build_env["PATH"] = os.pathsep.join((
+        str(Path(sys.base_prefix)),
+        str(Path(sys.base_prefix) / "Scripts"),
+        str(windows_root / "System32"),
+        str(windows_root),
+    ))
+    subprocess.run(command, check=True, env=build_env)
     package = ROOT / "dist" / "BROWSOR"
     for name in ("README.md", "CHANGELOG.md", "THIRD_PARTY_NOTICES.md"):
         shutil.copy2(ROOT / name, package / name)
-    shutil.copytree(ROOT / "LICENSES", package / "LICENSES", dirs_exist_ok=True)
+    copy_licenses(ROOT / "LICENSES", package / "LICENSES")
     # Preserve all notices shipped by the exact packages used to build this release.
     for name in ("PySide6", "PySide6_Addons", "PySide6_Essentials", "shiboken6", "pyinstaller"):
         dist = distribution(name)

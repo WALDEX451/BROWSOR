@@ -46,7 +46,7 @@ class SetupDialog(QDialog):
     def __init__(self, prefs: Preferences, parent=None, first_run: bool = False):
         super().__init__(parent)
         self.prefs, self.first_run = prefs, first_run
-        self.setWindowTitle("Welcome to BROWSOR" if first_run else "Your BROWSOR · Settings")
+        self.setWindowTitle("Create your local BROWSOR account" if first_run else "Your BROWSOR account & settings")
         self.setMinimumWidth(620)
         self.resize(660, 650)
         self.setModal(True)
@@ -71,7 +71,7 @@ class SetupDialog(QDialog):
         navigation = QHBoxLayout()
         navigation.setSpacing(8)
         self.sections = []
-        for index, name in enumerate(("01  You", "02  Your space", "03  Preferences")):
+        for index, name in enumerate(("01  Account", "02  Browsing", "03  Privacy & style")):
             button = QPushButton(name)
             button.setCheckable(True)
             button.clicked.connect(lambda checked=False, i=index: self.select_step(i))
@@ -85,13 +85,15 @@ class SetupDialog(QDialog):
         self.name_input = QLineEdit(prefs.name)
         self.name_input.setPlaceholderText("What should we call you?")
         self.name_input.setMaxLength(40)
-        field(layout, "Your first name or nickname", self.name_input, "A local profile. No account required.")
+        field(layout, "Your name or nickname", self.name_input,
+              "This creates a local BROWSOR account on this device. No email, password, or online service is needed.")
         self.purpose = combo(PURPOSES, prefs.purpose)
         field(layout, "What will you mainly use BROWSOR for?", self.purpose)
         self.intention = QLineEdit(prefs.text("profile/intention"))
         self.intention.setMaxLength(100)
         self.intention.setPlaceholderText("For example: learn something new today.")
-        field(layout, "Your start page message · optional", self.intention)
+        field(layout, "Your start page message · optional", self.intention,
+              "You can return to this account setup at any time with Ctrl+,")
         layout.addStretch()
         self.stack.addWidget(profile)
 
@@ -133,8 +135,8 @@ class SetupDialog(QDialog):
         note.setObjectName("card")
         note_layout = QVBoxLayout(note)
         note_layout.setContentsMargins(16, 13, 16, 13)
-        note_layout.addWidget(label("Set it up once. Make BROWSOR yours.", "fieldLabel"))
-        note_layout.addWidget(label("Your profile, favorites, and preferences are stored locally. You can change them here at any time.", "help", True))
+        note_layout.addWidget(label("Your local account stays under your control.", "fieldLabel"))
+        note_layout.addWidget(label("Your account name, favorites, and every preference are stored on this device. Change them here whenever you want.", "help", True))
         layout.addWidget(note)
         layout.addStretch()
         self.stack.addWidget(appearance)
@@ -163,17 +165,17 @@ class SetupDialog(QDialog):
 
     def select_step(self, index):
         self.stack.setCurrentIndex(index)
-        self.title.setText(("A great start begins with you.", "Everything in its place.", "The finishing touches.")[index])
+        self.title.setText(("Create your local account.", "Make browsing yours.", "Choose what stays private.")[index])
         self.description.setText((
-            "Tell us a little about yourself. Every field is optional.",
-            "Choose how you search, think, and start your day.",
-            "Add some color and choose what BROWSOR remembers.",
+            "Your account lives only on this device. Choose a name and how you want BROWSOR to greet you.",
+            "Change search, AI, start-page density, and session behaviour whenever you want.",
+            "Choose an accent, tracker protection, and whether websites can keep you signed in.",
         )[index])
-        self.step_label.setText(f"{index + 1} / 3" if self.first_run else "Local profile")
+        self.step_label.setText(f"{index + 1} / 3" if self.first_run else "Local account")
         for i, button in enumerate(self.sections):
             button.setChecked(i == index)
         self.back.setEnabled(not self.first_run or index > 0)
-        self.next.setText("Start BROWSOR" if self.first_run and index == 2 else "Continue" if self.first_run else "Save preferences")
+        self.next.setText("Create local account" if self.first_run and index == 2 else "Continue" if self.first_run else "Save all changes")
 
     def previous_or_cancel(self):
         if self.first_run:
@@ -197,6 +199,7 @@ class SetupDialog(QDialog):
             "appearance/compact": self.compact.isChecked(),
             "privacy/tracking": self.tracking.isChecked(),
             "privacy/remember_signins": self.remember.isChecked(),
+            "profile/type": "local",
             "onboarding/welcome_shown": True,
         }
         for key, value in values.items():

@@ -29,7 +29,7 @@ def render_home(prefs: Preferences, persistent: bool) -> str:
     greeting = f"{salutation}, {prefs.name}." if prefs.name else f"{salutation}. Welcome home."
     days = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
     months = ("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December")
-    colors = [("#333040", "#d8cbe9"), ("#3e292f", "#eea7b1"), ("#29342f", "#abd6bc"), ("#32323b", "#e0dce7"), ("#353044", "#bcb0ee")]
+    colors = [("#e6e4d7", "#595a50"), ("#f3ddd4", "#a45742"), ("#dde4d4", "#526445"), ("#e7e4de", "#57574d"), ("#e8e0ed", "#776183")]
     favorites = []
     # Keep the landing page calm; the manager exposes the complete list.
     for index, item in enumerate(prefs.bookmarks[:5]):

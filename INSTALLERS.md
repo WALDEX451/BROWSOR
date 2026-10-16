@@ -1,3 +1,13 @@
+# BROWSOR 2.0 beta 1 packages
+
+- Windows: `dist/BROWSOR-2.0.0-beta.1-windows-x64-setup.exe` (per-user setup), or the corresponding portable ZIP.
+- macOS: the updated `installers.yml` workflow builds `BROWSOR-2.0.0-beta.1-macos-arm64.dmg` and `BROWSOR-2.0.0-beta.1-macos-x86_64.dmg` from the same branch revision. These builds still need to run on GitHub macOS runners.
+- DuckDuckGo is the default search engine. `python scripts/check_duckduckgo.py` exercises a real form submission and address-bar search, including query encoding.
+- Windows binaries are unsigned. Mac bundles use ad-hoc signatures and are not notarized.
+- Version 2.0 has not been published as a GitHub release. The following notes describe the previous release only.
+
+---
+
 # BROWSOR 1.0 beta 1 installers
 
 All installation formats are attached to the same [1.0 beta 1 prerelease](https://github.com/WALDEX451/BROWSOR/releases/tag/v1.0.0-beta.1).

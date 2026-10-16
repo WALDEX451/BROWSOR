@@ -54,6 +54,14 @@ class BrowserPage(QWebEnginePage):
 
     def acceptNavigationRequest(self, url, navigation_type, is_main_frame):
         scheme = url.scheme().lower()
+        if (is_main_frame and is_home(self.url()) and scheme in ("http", "https")
+                and navigation_type == QWebEnginePage.NavigationType.NavigationTypeFormSubmitted):
+            # Chromium blocks a local-scheme document from submitting to the web.
+            # Start the top-level navigation natively without granting local pages
+            # remote-resource access. Preserve the form's encoded query unchanged.
+            destination = QUrl(url)
+            QTimer.singleShot(0, lambda: self.setUrl(destination))
+            return False
         if scheme == "browsor":
             if url.host() == "action":
                 # Remote documents cannot invoke native settings/favorites actions.
@@ -188,7 +196,7 @@ class BrowserWindow(QMainWindow):
         tab_row.addWidget(self.brand_mark)
         tab_row.addWidget(label(APP_NAME, "brand"))
         beta = QToolButton()
-        beta.setText("1.0 BETA")
+        beta.setText(DISPLAY_VERSION)
         beta.setObjectName("betaBadge")
         beta.setToolTip("About BROWSOR " + DISPLAY_VERSION)
         beta.clicked.connect(self.show_about)

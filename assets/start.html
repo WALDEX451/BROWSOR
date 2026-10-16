@@ -1,117 +1,111 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; form-action https:; base-uri 'none'; frame-src 'none'">
-  <meta name="color-scheme" content="dark">
-  <title>Your start — BROWSOR</title>
-  <style>
-    :root { --accent: __ACCENT__; --text: #f2eff9; --muted: #9392a5; --line: #ffffff12; --surface: #1c1d27; }
-    * { box-sizing: border-box; }
-    html { background: #13141b; }
-    body { margin: 0; color: var(--text); font: 14px/1.6 'Segoe UI', system-ui, sans-serif; -webkit-font-smoothing: antialiased;
-      background: radial-gradient(ellipse at 84% 15%, #52426f22 0, transparent 43%), radial-gradient(ellipse at 10% 96%, #38504712 0, transparent 42%), #13141b; }
-    a { color: inherit; text-decoration: none; }
-    button, input { font: inherit; }
-    button, a { -webkit-tap-highlight-color: transparent; }
-    a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 5px; }
-    svg { display: block; flex-shrink: 0; }
-    .page { max-width: 1120px; min-height: 100vh; margin: auto; padding: 34px 56px 22px; display: flex; flex-direction: column; }
-    .topline { display: flex; align-items: center; justify-content: space-between; gap: 20px; font-size: 11px; color: var(--muted); }
-    .space { display: flex; align-items: center; gap: 10px; letter-spacing: 2px; font-size: 10px; font-weight: 650; }
-    .space i { width: 7px; height: 7px; border-radius: 50%; background: #9cdec5; box-shadow: 0 0 18px #9cdec530; }
-    .date { text-transform: lowercase; }
-    .beta { display: inline-flex; margin-left: 8px; padding: 3px 7px; border: 1px solid #c4b5fd30; border-radius: 6px; color: var(--accent); font-size: 9px; letter-spacing: .5px; }
-    .hero { display: grid; grid-template-columns: minmax(0, 1fr) 190px; gap: 35px; align-items: center; padding-top: 45px; }
-    .greeting { margin: 0 0 10px; color: #afabbe; font-size: 13px; }
-    h1 { margin: 0; font-size: clamp(35px, 4.2vw, 53px); font-weight: 600; line-height: 1.15; letter-spacing: -2.2px; }
-    h1 span { color: var(--accent); }
-    .tagline { margin: 16px 0 0; color: var(--muted); max-width: 540px; font-size: 13px; }
-    .orbit { width: 178px; height: 178px; position: relative; display: grid; place-items: center; isolation: isolate; }
-    .orbit::before, .orbit::after { content: ''; position: absolute; inset: 8px; border-radius: 50%; border: 1px solid #c4b5fd22; transform: rotate(-35deg) scaleX(.62); }
-    .orbit::after { transform: rotate(38deg) scaleX(.62); border-color: #99e2c52b; }
-    .planet { width: 79px; height: 79px; border-radius: 26px; background: linear-gradient(145deg, #c4b5fd1f, #99e2c510); border: 1px solid #c4b5fd2c; display: grid; place-items: center; color: var(--accent); transform: rotate(-9deg); box-shadow: 0 18px 55px #0003, 0 0 60px #b9a3f210; }
-    .satellite { position: absolute; top: 29px; right: 37px; width: 8px; height: 8px; background: #a9dfcb; border-radius: 50%; box-shadow: 0 0 15px #99e2c540; }
-    .search { display: flex; align-items: center; gap: 14px; padding: 9px 10px 9px 21px; margin-top: 29px; background: linear-gradient(115deg, #272632, #20212b); border: 1px solid #4c435e; border-radius: 16px; box-shadow: 0 10px 35px #00000020; }
-    .search:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px #c4b5fd0b; }
-    .search-icon { color: var(--accent); }
-    .search input { flex: 1; min-width: 0; width: 100%; border: 0; outline: 0; background: transparent; color: var(--text); padding: 10px 0; font-size: 14px; }
-    .search input:focus-visible { outline: 0; }
-    .search input::placeholder { color: #a7a1b7; }
-    .search button { display: grid; place-items: center; width: 42px; height: 42px; border: 0; border-radius: 11px; background: var(--accent); color: #231d31; cursor: pointer; }
-    .search button:hover { filter: brightness(1.12); }
-    .search-hint { margin: 9px 3px 0; font-size: 10px; color: #737184; display: flex; justify-content: space-between; }
-    .search-hint a:hover { color: var(--accent); }
-    .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin: 30px 0 14px; }
-    .section-heading h2 { margin: 0; font-size: 12px; font-weight: 600; color: #c2bece; }
-    .text-link { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); }
-    .text-link:hover { color: var(--accent); }
-    .favorites { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; }
-    .favorite { min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 9px; border: 1px solid var(--line); padding: 18px 9px 14px; background: #1c1d2670; border-radius: 14px; transition: border-color .15s, background .15s, transform .15s; }
-    .favorite:hover { background: #262430; border-color: #c4b5fd50; transform: translateY(-3px); }
-    .favicon { width: 35px; height: 35px; display: grid; place-items: center; border-radius: 11px; background: var(--tile-bg); color: var(--tile-text); font-size: 17px; font-weight: 650; }
-    .favorite-name { max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #c4c0d1; font-size: 11px; }
-    .favorite.add { border-style: dashed; background: transparent; }
-    .favorite.add .favicon { background: transparent; color: #898497; }
-    .cards { display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px; margin-top: 27px; }
-    .card { position: relative; overflow: hidden; border: 1px solid var(--line); border-radius: 17px; padding: 23px 24px; background: #1b1c25; }
-    .ai-card { background: radial-gradient(ellipse at 100% 0, #6c4b8c26, transparent 70%), #1e1c29; border-color: #443650; }
-    .card-top { display: flex; align-items: center; gap: 9px; color: var(--accent); font-size: 9px; font-weight: 650; letter-spacing: 1.8px; }
-    .card-top.mint { color: #a0dcc6; }
-    .card h2 { margin: 14px 0 6px; font-size: 19px; letter-spacing: -.4px; font-weight: 600; }
-    .card p { color: var(--muted); font-size: 12px; margin: 0; max-width: 320px; }
-    .card-bottom { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 20px; }
-    .open-ai { display: inline-flex; align-items: center; gap: 13px; color: #e0d6f5; font-size: 11px; font-weight: 600; }
-    .open-ai:hover { color: white; }
-    .key { color: #858090; padding: 2px 6px; border: 1px solid #ffffff13; border-radius: 5px; font: 10px 'Segoe UI', sans-serif; white-space: nowrap; }
-    .pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 18px; }
-    .pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border: 1px solid #ffffff0d; border-radius: 6px; background: #ffffff04; color: #a9a5b7; font-size: 10px; }
-    footer { margin-top: auto; padding-top: 32px; display: flex; align-items: center; justify-content: space-between; gap: 16px; color: #787585; font-size: 10px; }
-    footer .privacy { display: flex; align-items: center; gap: 7px; }
-    footer .shortcuts { display: flex; align-items: center; gap: 12px; }
-    .compact .hero { padding-top: 18px; }
-    .compact .orbit { height: 125px; width: 125px; }
-    .compact h1 { font-size: 38px; }
-    .compact .favorite { padding: 12px 8px; }
-    .compact .card { padding: 17px 21px; }
-    .compact .cards { margin-top: 19px; }
-    @media (min-height: 850px) { .hero { padding-top: 65px; } .cards { margin-top: 35px; } .page { padding-top: 43px; padding-bottom: 30px; } }
-    @media (min-width: 781px) and (max-height: 820px) { .page { padding-top: 26px; padding-bottom: 16px; } .hero { padding-top: 22px; } h1 { font-size: 46px; } .orbit { width: 148px; height: 148px; } .search { margin-top: 24px; } .section-heading { margin: 22px 0 12px; } .cards { margin-top: 20px; } .card { padding: 19px 24px; } footer { padding-top: 22px; } }
-    @media (max-width: 780px) { .page { padding: 26px 30px 20px; } .hero { grid-template-columns: 1fr 120px; gap: 10px; padding-top: 30px; } .orbit { width: 120px; height: 130px; } .planet { width: 64px; height: 64px; } h1 { font-size: 37px; } .card { padding: 20px; } .card-bottom .key { display: none; } }
-    @media (min-width: 781px) and (max-height: 820px) { .hero { padding-top: 18px; } .search { margin-top: 20px; } footer { padding-top: 14px; } }
-    @media (max-width: 550px) { .page { padding: 24px; } .hero { grid-template-columns: 1fr; } .orbit { display: none; } h1 { font-size: 35px; letter-spacing: -1.5px; } .favorites { grid-template-columns: repeat(3, minmax(0, 1fr)); } .cards { grid-template-columns: 1fr; } .date { display: none; } footer .shortcuts { display: none; } .search-hint span:last-child { display: none; } }
-    @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
-  </style>
-</head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; form-action https:; base-uri 'none'; frame-src 'none'">
+<meta name="color-scheme" content="light"><title>Your start — BROWSOR</title>
+<style>
+:root { --accent: __ACCENT__; --ink: #262620; --muted: #77766b; --paper: #f5f3eb; --line: #deddd2; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 14px/1.6 'Segoe UI', system-ui, sans-serif; }
+a { color: inherit; text-decoration: none; }
+button,input { font: inherit; }
+svg { display: block; flex-shrink: 0; }
+a,button { transition: background .2s, transform .2s; }
+a:focus-visible,button:focus-visible,input:focus-visible { outline: 3px solid #97623d; outline-offset: 4px; }
+.layout { display: grid; grid-template-columns: 210px minmax(0,1fr); min-height: 100vh; }
+.rail { display: flex; flex-direction: column; padding: 28px 18px 22px; border-right: 1px solid var(--line); background: #ebeade; }
+.wordmark { display: flex; align-items: baseline; gap: 8px; font-size: 27px; font-weight: 750; letter-spacing: -1.5px; padding: 0 15px; }
+.wordmark span { font-size: 9px; letter-spacing: 0; border: 1px solid #c4c5b6; padding: 1px 6px; border-radius: 5px; }
+.nav-label { margin: 38px 15px 12px; color: #858477; font-size: 9px; font-weight: 650; letter-spacing: 2px; }
+.nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 15px; border-radius: 9px; color: #69695f; font-size: 12px; margin: 2px 0; }
+.nav-item svg { width: 18px; height: 18px; }
+.nav-item:hover { background: #e1e0d2; }
+.nav-item.selected { color: #2f3524; background: #d8ddc9; font-weight: 650; }
+.rail-note { margin: auto 12px 22px; padding-top: 55px; }
+.small-flower { font-size: 48px; line-height: 1; color: #707951; }
+.rail-note p { font: italic 20px/1.3 Georgia,serif; color: #666a50; }
+.rail-note small { color: #818172; font-size: 10px; }
+.page { padding: 28px 44px 20px; width: 100%; max-width: 1440px; margin: auto; min-height: 100vh; display: flex; flex-direction: column; }
+.topline { display: flex; justify-content: space-between; align-items: center; gap: 20px; font-size: 11px; color: var(--muted); }
+.breadcrumb { display: flex; gap: 12px; align-items: center; }
+.breadcrumb strong { font-weight: 500; color: #35382b; }
+.top-actions { display: flex; gap: 18px; align-items: center; }
+.customize { display: flex; align-items: center; gap: 7px; }
+.hero { display: grid; grid-template-columns: 1.15fr 1fr; gap: 35px; padding: 30px 0 22px; align-items: center; }
+.eyebrow { font-size: 10px; letter-spacing: 2px; color: #7a7b62; font-weight: 600; margin: 0 0 24px; }
+h1 { font-size: clamp(48px,5.2vw,76px); line-height: 1.04; font-weight: 450; letter-spacing: -4px; margin: 0; }
+h1 em { font-family: Georgia,serif; font-weight: 400; color: #747b50; letter-spacing: -4px; }
+.greeting { margin: 24px 0 4px; font-size: 13px; color: #4f5146; }
+.tagline { max-width: 350px; font-size: 12px; color: var(--muted); margin: 0; }
+.art { position: relative; overflow: hidden; min-height: 280px; border-radius: 160px 160px 16px 16px; background: linear-gradient(180deg,#ddd9bd 0%,#e9d0ad 58%,#baad86 100%); isolation: isolate; }
+.sun { position: absolute; width: 115px; height: 115px; left: 53%; top: 48px; border-radius: 50%; background: #fff4cf; box-shadow: 0 0 65px #fff3ce77; }
+.hill { position: absolute; border-radius: 50% 50% 0 0; }
+.hill.one { width: 540px; height: 300px; left: -200px; bottom: -166px; transform: rotate(20deg); background: #838b64; }
+.hill.two { width: 420px; height: 280px; right: -155px; bottom: -100px; transform: rotate(-25deg); background: #525f45; }
+.hill.three { width: 440px; height: 220px; left: -150px; bottom: -164px; background: #303f32; transform: rotate(12deg); }
+.arch { position: absolute; width: 126px; height: 206px; left: 37%; bottom: 35px; border: 27px solid #b56d4b; border-bottom: 0; border-radius: 90px 90px 0 0; transform: rotate(-8deg); box-shadow: 11px 5px 0 #8b5035,20px 20px 26px #37260e20; }
+.arch::after { content: ''; position: absolute; width: 115px; height: 14px; background: #e0a174; left: -27px; bottom: -8px; transform: skewX(-25deg); }
+.art-caption { position: absolute; bottom: 18px; right: 20px; color: #f4efda; font-size: 8px; letter-spacing: 2px; }
+.search { display: flex; align-items: center; gap: 14px; padding: 12px 12px 12px 22px; background: #fffefa; border: 1px solid #dbdbce; border-radius: 13px; box-shadow: 0 8px 25px #45442b07; }
+.search-icon { color: #82866e; }
+.search input { min-width: 0; flex: 1; border: 0; outline: 0; background: transparent; color: #2a2d24; padding: 8px 0; font-size: 14px; }
+.search input::placeholder { color: #929285; }
+.search:focus-within { border-color: #7b8458; }
+.search button { display: flex; align-items: center; justify-content: center; gap: 14px; background: #30392b; color: #f9f7ea; border: 0; border-radius: 8px; padding: 12px 19px; cursor: pointer; font-size: 11px; }
+.search button:hover { background: #515c41; }
+.search-hint { display: flex; justify-content: space-between; font-size: 10px; color: #858578; margin: 10px 2px 0; }
+.key { font: 9px 'Segoe UI'; border: 1px solid #d8d8c9; border-radius: 4px; padding: 2px 5px; }
+.section-heading { display: flex; justify-content: space-between; align-items: center; margin: 27px 0 14px; }
+.section-heading h2 { font-size: 14px; font-weight: 550; margin: 0; }
+.text-link { display: flex; align-items: center; gap: 8px; color: #76796a; font-size: 10px; }
+.favorites { display: grid; grid-template-columns: repeat(6,minmax(0,1fr)); gap: 10px; }
+.favorite { display: flex; align-items: center; gap: 10px; padding: 15px 12px; border: 1px solid #deded1; border-radius: 11px; min-width: 0; background: #faf9f2; }
+.favorite:hover { background: #e7ebdb; transform: translateY(-3px); }
+.favicon { width: 31px; height: 31px; display: grid; place-items: center; flex-shrink: 0; background: var(--tile-bg); color: var(--tile-text); border-radius: 9px; font-size: 14px; font-weight: 650; }
+.favorite-name { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.favorite.add { background: transparent; border-style: dashed; color: #7d806c; }
+.cards { display: grid; grid-template-columns: 1.35fr 1fr; gap: 16px; margin-top: 20px; }
+.card { padding: 19px 25px; border-radius: 15px; }
+.ai-card { background: #e4e8d8; position: relative; }
+.card-top { display: flex; align-items: center; gap: 8px; font-size: 9px; letter-spacing: 1.7px; color: #6b7454; }
+.card h2 { font: 25px/1.2 Georgia,serif; letter-spacing: -.5px; margin: 14px 0 8px; }
+.card p { color: #747765; font-size: 11px; max-width: 320px; margin: 0; }
+.card-bottom { display: flex; justify-content: space-between; gap: 14px; align-items: center; margin-top: 17px; }
+.open-ai { display: flex; align-items: center; gap: 13px; font-size: 11px; font-weight: 600; }
+.personal-card { background: #ebe3d6; }
+.personal-card .card-top { color: #897158; }
+.pills { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 17px; }
+.pill { border: 1px solid #d6cebf; border-radius: 15px; padding: 3px 8px; font-size: 9px; color: #766b5c; }
+footer { display: flex; justify-content: space-between; gap: 16px; font-size: 9px; color: #878878; padding-top: 18px; margin-top: auto; }
+.privacy { display: flex; align-items: center; gap: 7px; }
+.compact .hero { padding-top: 22px; padding-bottom: 20px; }
+.compact .art { min-height: 270px; }
+.compact h1 { font-size: 54px; }
+.compact .card { padding: 17px 22px; }
+@media(max-width:1150px) { .layout { grid-template-columns: 170px minmax(0,1fr); } .rail { padding-left: 10px; padding-right: 10px; } .page { padding: 26px 30px; } .hero { gap: 22px; } h1 { font-size: 56px; } .art { min-height: 300px; } .favorite { flex-direction: column; } }
+@media(max-width:900px) { .layout { grid-template-columns: 64px minmax(0,1fr); } .rail { padding: 25px 8px; } .wordmark { font-size: 0; padding: 0; justify-content: center; } .wordmark::before { content: 'b.'; font-size: 28px; } .wordmark span,.nav-label,.nav-item span,.rail-note { display: none; } .nav-item { padding: 14px; } .rail .selected { margin-top: 30px; } .hero { padding-top: 30px; } h1 { font-size: 49px; letter-spacing: -2.5px; } h1 em { letter-spacing: -2px; } .art { min-height: 280px; } .arch { left: 27%; } .date { display: none; } }
+@media(max-width:620px) { .page { padding: 22px; } .hero { grid-template-columns: 1fr; } .art { display: none; } h1 { font-size: 54px; } .favorites { grid-template-columns: repeat(3,minmax(0,1fr)); } .cards { grid-template-columns: 1fr; } .search-hint>a,footer>span,.search button span { display: none; } .search button { padding: 12px; } .greeting { margin-top: 20px; } }
+@media(prefers-reduced-motion:reduce) { * { transition: none!important; } }
+</style></head>
 <body class="__DENSITY__">
-  <main class="page">
-    <div class="topline"><div class="space"><i></i> YOUR PERSONAL SPACE <a class="beta" href="browsor://action/about">__VERSION__</a></div><span class="date">__DATE__</span></div>
-    <section class="hero" aria-labelledby="heading">
-      <div><p class="greeting">__GREETING__</p><h1 id="heading">Your space.<br><span>For what's next.</span></h1><p class="tagline">__TAGLINE__</p></div>
-      <div class="orbit" aria-hidden="true"><div class="planet">__HERO_ICON__</div><i class="satellite"></i></div>
-    </section>
-    <form class="search" action="__SEARCH_ACTION__" method="get" role="search">
-      <span class="search-icon" aria-hidden="true">__SEARCH_ICON__</span>
-      <input type="search" name="q" aria-label="Search with __SEARCH_ENGINE__" placeholder="Search for something inspiring. Or something practical." autocomplete="off" required>
-      <button type="submit" title="Search" aria-label="Search">__ARROW_ICON__</button>
-    </form>
-    <div class="search-hint"><span>Search with <a href="browsor://action/settings">__SEARCH_ENGINE__</a></span><a href="browsor://action/commands">Tabs, favorites, everything. <kbd class="key">Ctrl K</kbd></a></div>
-    <section aria-labelledby="favorites-heading">
-      <div class="section-heading"><h2 id="favorites-heading">Close at hand, every day</h2><a class="text-link" href="browsor://action/bookmarks">Manage favorites __SMALL_ARROW__</a></div>
-      <div class="favorites">__FAVORITES__<a class="favorite add" href="browsor://action/add-bookmark"><span class="favicon">__PLUS_ICON__</span><span class="favorite-name">Add</span></a></div>
-    </section>
-    <div class="cards">
-      <section class="card ai-card">
-        <div class="card-top">__SPARK_ICON__ A LITTLE EXTRA BRAINPOWER</div><h2>Big ideas start small.</h2><p>Ask, write, and explore with your AI assistant, right beside the page you are viewing.</p>
-        <div class="card-bottom"><a class="open-ai" href="browsor://action/ai">Open __AI_PROVIDER__ __SMALL_ARROW__</a><kbd class="key">Ctrl Shift A</kbd></div>
-      </section>
-      <section class="card">
-        <div class="card-top mint">__SLIDERS_ICON__ YOUR WAY</div><h2>A welcoming place to begin.</h2><p>Your preferences, your own pace. Make BROWSOR feel a little more like yours.</p>
-        <div class="pills"><span class="pill">__PURPOSE__</span><span class="pill">__FILTER_STATE__</span><a class="pill" href="browsor://action/settings">Customize __TINY_ARROW__</a></div>
-      </section>
-    </div>
-    <footer><a class="privacy" href="browsor://action/privacy">__SHIELD_ICON__ __SESSION_LABEL__</a><div class="shortcuts"><a href="browsor://action/commands"><kbd class="key">Ctrl K</kbd> Go anywhere</a><span><kbd class="key">Ctrl D</kbd> Save favorite</span></div></footer>
-  </main>
-</body>
-</html>
+<div class="layout">
+<nav class="rail" aria-label="Workspace">
+<a class="wordmark" href="browsor://action/about">browsor<span>__VERSION__</span></a>
+<div class="nav-label">YOUR WORKSPACE</div>
+<a class="nav-item selected" href="browsor://home/" aria-label="Start page">__HERO_ICON__<span>Start page</span></a>
+<a class="nav-item" href="browsor://action/bookmarks" aria-label="Favorites">__PLUS_ICON__<span>Favorites</span></a>
+<a class="nav-item" href="browsor://action/ai" aria-label="AI space">__SPARK_ICON__<span>AI space</span></a>
+<a class="nav-item" href="browsor://action/commands" aria-label="Quick commands">__SEARCH_ICON__<span>Quick commands</span></a>
+<div class="rail-note"><div class="small-flower" aria-hidden="true">✳</div><p>A quieter corner<br>of the internet.</p><small>A little space. A fresh perspective.</small></div>
+<a class="nav-item" href="browsor://action/settings" aria-label="Preferences">__SLIDERS_ICON__<span>Preferences</span></a>
+</nav>
+<main class="page">
+<div class="topline"><div class="breadcrumb">Your workspace <span>/</span> <strong>Start page</strong></div><div class="top-actions"><span class="date">__DATE__</span><a class="customize" href="browsor://action/settings">__SLIDERS_ICON__ Make it yours</a></div></div>
+<section class="hero" aria-labelledby="heading"><div><p class="eyebrow">A FRESH WINDOW ON THE WORLD</p><h1 id="heading">Less rush.<br>More <em>wonder.</em></h1><p class="greeting">__GREETING__</p><p class="tagline">__TAGLINE__</p></div><div class="art" role="img" aria-label="An abstract terracotta arch among rolling green hills beneath a warm sun"><div class="sun"></div><div class="hill one"></div><div class="hill two"></div><div class="arch"></div><div class="hill three"></div><span class="art-caption">TAKE THE SCENIC ROUTE</span></div></section>
+<form class="search" action="__SEARCH_ACTION__" method="get" role="search"><span class="search-icon" aria-hidden="true">__SEARCH_ICON__</span><input type="search" name="q" aria-label="Search with __SEARCH_ENGINE__" placeholder="A question, an idea, a new direction…" required autocomplete="off"><button type="submit" aria-label="Search"><span>Let's explore</span>__ARROW_ICON__</button></form>
+<div class="search-hint"><span>Search with <a href="browsor://action/settings">__SEARCH_ENGINE__</a></span><a href="browsor://action/commands">Or jump anywhere <kbd class="key">Ctrl K</kbd></a></div>
+<section aria-labelledby="favorites-heading"><div class="section-heading"><h2 id="favorites-heading">Good places to come back to</h2><a class="text-link" href="browsor://action/bookmarks">Manage favorites __SMALL_ARROW__</a></div><div class="favorites">__FAVORITES__<a class="favorite add" href="browsor://action/add-bookmark"><span class="favicon">__PLUS_ICON__</span><span class="favorite-name">Add a place</span></a></div></section>
+<div class="cards"><section class="card ai-card"><div class="card-top">__SPARK_ICON__ A LITTLE COMPANY FOR YOUR IDEAS</div><h2>Where a thought becomes something.</h2><p>Write, untangle, imagine. Your AI assistant is just one click away, right beside your page.</p><div class="card-bottom"><a class="open-ai" href="browsor://action/ai">Think with __AI_PROVIDER__ __SMALL_ARROW__</a><kbd class="key">Ctrl Shift A</kbd></div></section><section class="card personal-card"><div class="card-top">__SLIDERS_ICON__ PERFECTLY PERSONAL</div><h2>Settle into your own space.</h2><p>Your pace, your preferences. A browser that starts with you.</p><div class="pills"><span class="pill">__PURPOSE__</span><span class="pill">__FILTER_STATE__</span><a class="pill" href="browsor://action/settings">Personalize ↗</a></div></section></div>
+<footer><a class="privacy" href="browsor://action/privacy">__SHIELD_ICON__ __SESSION_LABEL__</a><span>A fresh start, every time. BROWSOR __VERSION__</span></footer>
+</main></div></body></html>

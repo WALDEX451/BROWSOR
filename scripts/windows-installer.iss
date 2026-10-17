@@ -2,19 +2,19 @@
 #ifndef SourceRoot
   #define SourceRoot ".."
 #endif
-#define AppVersion "2.0.0-beta.2"
+#define AppVersion "2.0.0"
 
 [Setup]
 AppId={{9C16D58C-4C66-45A5-A748-225428BE996B}
 AppName=BROWSOR
 AppVersion={#AppVersion}
-AppVerName=BROWSOR 2.0 beta 2
+AppVerName=BROWSOR 2.0
 AppPublisher=WALDEX451
 AppPublisherURL=https://github.com/WALDEX451/BROWSOR
 AppSupportURL=https://github.com/WALDEX451/BROWSOR/issues
 AppUpdatesURL=https://github.com/WALDEX451/BROWSOR/releases
-DefaultDirName={localappdata}\Programs\BROWSOR Beta
-DefaultGroupName=BROWSOR Beta
+DefaultDirName={localappdata}\Programs\BROWSOR
+DefaultGroupName=BROWSOR
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
@@ -30,7 +30,7 @@ WizardStyle=modern
 VersionInfoVersion=2.0.0.1
 VersionInfoProductVersion=2.0.0.1
 VersionInfoProductTextVersion={#AppVersion}
-VersionInfoDescription=BROWSOR 2.0 beta 2 Installer
+VersionInfoDescription=BROWSOR 2.0 Installer
 CloseApplications=yes
 RestartApplications=no
 
@@ -41,8 +41,8 @@ Name: "desktopicon"; Description: "Create a desktop shortcut"; GroupDescription:
 Source: "{#SourceRoot}\dist\BROWSOR\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{group}\BROWSOR Beta"; Filename: "{app}\BROWSOR.exe"
-Name: "{autodesktop}\BROWSOR Beta"; Filename: "{app}\BROWSOR.exe"; Tasks: desktopicon
+Name: "{group}\BROWSOR"; Filename: "{app}\BROWSOR.exe"
+Name: "{autodesktop}\BROWSOR"; Filename: "{app}\BROWSOR.exe"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\BROWSOR.exe"; Description: "Open BROWSOR 2.0 beta 2"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\BROWSOR.exe"; Description: "Open BROWSOR 2.0"; Flags: nowait postinstall skipifsilent

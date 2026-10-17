@@ -1,31 +1,31 @@
-# BROWSOR · 2.0 beta 2
+# BROWSOR · 2.0
 
 **Your space. For what's next.**
 
 A personal desktop browser with a calm start page, local preferences and an AI workspace beside the web. Built with Python, PySide6 and Qt WebEngine.
 
-[Download the beta for Windows or macOS](https://github.com/WALDEX451/BROWSOR/releases/tag/v2.0.0-beta.2) · [What's new](CHANGELOG.md) · [Report an issue](https://github.com/WALDEX451/BROWSOR/issues)
+[Download BROWSOR 2.0 for Windows or macOS](https://github.com/WALDEX451/BROWSOR/releases/tag/v2.0.0) · [What's new](CHANGELOG.md) · [Report an issue](https://github.com/WALDEX451/BROWSOR/issues)
 
 ![BROWSOR 2.0 — the redesigned personal start page](assets/preview-v2.png)
 
 ## Try version 2.0 from source
 
-Version 2.0 beta 2 introduces an Apple-inspired light workspace: translucent surfaces, system-blue accents, rounded cards, quick actions and a distraction-free Reader mode. Existing profiles retain their settings; choose Blue in preferences for the new default accent.
+Version 2.0 brings an Apple-inspired light workspace: translucent surfaces, system-blue accents, rounded cards, quick actions and a distraction-free Reader mode. Existing profiles retain their settings; choose Blue in preferences for the new default accent.
 
-Run `pip install -r requirements.txt`, then `python main.py`. To regenerate the real-app preview and run layout/tab smoke checks on Windows, run `python scripts/preview_v2.py`. Local Windows packages are in `dist/`: `BROWSOR-2.0.0-beta.2-windows-x64-setup.exe` and `BROWSOR-2.0.0-beta.2-windows-x64.zip`. The setup installs for the current user. The executable is unsigned and this beta has no automatic updater. DuckDuckGo is the default search engine, with live smoke checks in `python scripts/check_duckduckgo.py`.
+Run `pip install -r requirements.txt`, then `python main.py`. To regenerate the real-app preview and run layout/tab smoke checks on Windows, run `python scripts/preview_v2.py`. Local Windows packages are in `dist/`: `BROWSOR-2.0.0-windows-x64-setup.exe` and `BROWSOR-2.0.0-windows-x64.zip`. The setup installs for the current user. The executable is unsigned and there is no automatic updater yet. DuckDuckGo is the default search engine, with live smoke checks in `python scripts/check_duckduckgo.py`.
 
 ## Get started on Windows
 
-1. Download **BROWSOR-2.0.0-beta.2-windows-x64-setup.exe** from the release page.
+1. Download **BROWSOR-2.0.0-windows-x64-setup.exe** from the release page.
 2. Run the installer. It installs for your Windows account and creates a Start menu shortcut; a desktop shortcut is optional.
-3. Open **BROWSOR Beta**. Python is included; no separate Python installation is needed.
+3. Open **BROWSOR**. Python is included; no separate Python installation is needed.
 4. Choose your name, browsing purpose, search engine, AI assistant, accent color and what BROWSOR remembers.
 
-Prefer a portable folder? **BROWSOR-2.0.0-beta.2-windows-x64.zip** is also available. Extract the entire ZIP and keep `BROWSOR.exe` and `_internal` together.
+Prefer a portable folder? **BROWSOR-2.0.0-windows-x64.zip** is also available. Extract the entire ZIP and keep `BROWSOR.exe` and `_internal` together.
 
 Setup is shown until you save it, then remembered. Reopen your preferences anytime with **Ctrl+,**. Website sign-in storage changes take effect after restarting.
 
-This is **2.0.0-beta.2**. The Windows executable is unsigned, so Windows may show an unknown-publisher warning. There is no automatic updater. See [beta limitations](CHANGELOG.md#beta-limitations) before relying on it as your everyday browser.
+This is **2.0.0**. The Windows executable is unsigned, so Windows may show an unknown-publisher warning. There is no automatic updater. See [known limitations](CHANGELOG.md#known-limitations) before relying on it as your everyday browser.
 
 ## Get started on macOS
 
@@ -33,8 +33,8 @@ Requires macOS 13 or later. Choose the file that matches your Mac:
 
 | Mac | Download |
 | --- | --- |
-| Apple Silicon (M1, M2, M3, M4 and later) | `BROWSOR-2.0.0-beta.2-macos-arm64.dmg` |
-| Intel | `BROWSOR-2.0.0-beta.2-macos-x86_64.dmg` |
+| Apple Silicon (M1, M2, M3, M4 and later) | `BROWSOR-2.0.0-macos-arm64.dmg` |
+| Intel | `BROWSOR-2.0.0-macos-x86_64.dmg` |
 
 Open the DMG, drag **BROWSOR.app** to **Applications**, then open BROWSOR from Applications. Python and Qt are included. The Mac builds use an ad-hoc signature; they are **not Apple Developer ID signed or notarized**. macOS may block the first launch. After trying to open the downloaded app, review **System Settings → Privacy & Security → Open Anyway** if you trust that copy. Do not disable Gatekeeper.
 
@@ -102,12 +102,12 @@ The build produces a folder, ZIP and `SHA256SUMS.txt` in `dist/`. It bundles dyn
 
 To make the installation EXE, compile `scripts/windows-installer.iss` with Inno Setup 6 or later and pass `/DSourceRoot=` followed by this checkout's absolute path. For macOS, run `python scripts/build_macos.py` **on a Mac**, using Python 3.12 and `requirements-build.txt`; it produces a DMG for the machine's native architecture.
 
-The GitHub **Build beta installers** workflow builds on Windows, Apple Silicon and Intel Mac runners, checks packaged startup, and adds assets to the existing beta without moving its tag. A separate **Check published installer startup** workflow can check the published downloads again.
+The GitHub **Build installers** workflow builds on Windows, Apple Silicon and Intel Mac runners and checks packaged startup. A separate **Check published installer startup** workflow can check the published downloads again.
 
 For a downloaded ZIP, compare its hash with the release's `SHA256SUMS.txt`:
 
 ```powershell
-Get-FileHash .\BROWSOR-1.0.0-beta.1-windows-x64.zip -Algorithm SHA256
+Get-FileHash .\BROWSOR-2.0.0-windows-x64.zip -Algorithm SHA256
 ```
 
 ## Source and licensing

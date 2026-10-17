@@ -1,15 +1,16 @@
-name: Build beta installers
+name: Build installers
 
 on:
   workflow_dispatch:
   push:
     branches: [codex/browsor-2-design]
+    tags: ['v*']
 
 permissions:
   contents: read
 
 concurrency:
-  group: browsor-beta-installers
+  group: browsor-installers
   cancel-in-progress: false
 
 jobs:
@@ -42,7 +43,7 @@ jobs:
       - name: Build native app and DMG
         run: python packaging/scripts/build_macos.py --source app
       - name: Check packaged Mac application startup
-        run: python packaging/scripts/check_installer_startup.py app/dist/BROWSOR-2.0.0-beta.2-macos-${{ matrix.arch }}.dmg
+        run: python packaging/scripts/check_installer_startup.py app/dist/BROWSOR-2.0.0-macos-${{ matrix.arch }}.dmg
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
@@ -89,7 +90,7 @@ jobs:
           & $compilerPath "/DSourceRoot=$sourceRoot" packaging/scripts/windows-installer.iss
           if ($LASTEXITCODE -ne 0) { throw "Installer compilation failed" }
       - name: Check installed Windows application startup
-        run: python packaging/scripts/check_installer_startup.py app/dist/BROWSOR-2.0.0-beta.2-windows-x64-setup.exe
+        run: python packaging/scripts/check_installer_startup.py app/dist/BROWSOR-2.0.0-windows-x64-setup.exe
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:

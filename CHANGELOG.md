@@ -1,9 +1,11 @@
-# 2.0.0-beta.2 — Apple-style workspace
+# 2.0.0 — Apple-style workspace
 
 - Apple-inspired light interface with translucent surfaces, system-blue accents and rounded quick-action cards.
 - New Reader mode for websites, available from the toolbar, command menu and `Ctrl+Shift+R`.
 - Updated public preview screenshot and release documentation.
 - Windows and macOS packages are built and startup-tested in GitHub Actions.
+
+This release promotes the 2.0 design to the first stable BROWSOR 2 release.
 
 # 2.0.0-beta.1 — Design beta
 
@@ -40,7 +42,7 @@ The second design iteration of BROWSOR, published as the first beta of 1.0.
 - Existing English interface and migration of older Dutch settings are retained.
 - Release packaging has version metadata, a Windows icon, checksums and dependency notices.
 
-### Beta limitations
+### Known limitations
 
 - Packaged targets are Windows x64 and macOS 13+ on Apple Silicon or Intel. Installer startup checks cover opening the app and loading its local start page; they are not a full browser compatibility audit.
 - This build is unsigned and has no automatic updater. Windows may show an unknown-publisher warning.

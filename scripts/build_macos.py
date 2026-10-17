@@ -97,7 +97,7 @@ def main():
 Drag BROWSOR.app into the Applications shortcut, then open it from Applications.
 Requires macOS 13 or later. Use arm64 for Apple Silicon (M-series), x86_64 for Intel.
 
-This beta is ad-hoc signed, not signed with an Apple Developer ID or notarized.
+This app is ad-hoc signed, not signed with an Apple Developer ID or notarized.
 macOS may block the first launch. After trying to open your downloaded copy,
 review System Settings > Privacy & Security and use Open Anyway if you trust it.
 Do not disable Gatekeeper. No Apple developer credentials are included.

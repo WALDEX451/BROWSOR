@@ -13,6 +13,7 @@ import subprocess
 import sys
 import sysconfig
 import tempfile
+import time
 import urllib.request
 
 TOOLS = Path(__file__).resolve().parent
@@ -119,8 +120,16 @@ Licenses and build information: BROWSOR.app/Contents/Resources/
         shutil.copytree(bundle, staging / "BROWSOR.app", symlinks=True)
         (staging / "Applications").symlink_to("/Applications", target_is_directory=True)
         (staging / "READ ME.txt").write_text(instructions, encoding="utf-8")
-        subprocess.run(["hdiutil", "create", "-ov", "-volname", "BROWSOR 2.0", "-srcfolder", str(staging),
-                        "-fs", "HFS+", "-format", "UDZO", str(dmg)], check=True)
+        command = ["hdiutil", "create", "-ov", "-volname", "BROWSOR 2.0", "-srcfolder", str(staging),
+                   "-fs", "HFS+", "-format", "UDZO", str(dmg)]
+        for attempt in range(3):
+            try:
+                subprocess.run(command, check=True)
+                break
+            except subprocess.CalledProcessError:
+                if attempt == 2:
+                    raise
+                time.sleep(4)
     subprocess.run(["hdiutil", "verify", str(dmg)], check=True)
     with dmg.open("rb") as file:
         digest = hashlib.file_digest(file, "sha256").hexdigest()

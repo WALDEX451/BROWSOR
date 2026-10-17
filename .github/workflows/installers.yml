@@ -54,7 +54,9 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: macos-${{ matrix.arch }}
-          path: app/dist/*.dmg
+          path: |
+            app/dist/*.dmg
+            app/dist/*.sha256
           compression-level: 0
           if-no-files-found: error
           retention-days: 7
@@ -101,8 +103,55 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: windows-installer
-          path: app/dist/*-setup.exe
+          path: |
+            app/dist/*-setup.exe
+            app/dist/*.zip
+            app/dist/SHA256SUMS.txt
           compression-level: 0
           if-no-files-found: error
           retention-days: 7
+
+  publish:
+    name: Publish BROWSOR 2.0.0 release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [macos, windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: macos-arm64
+          path: release-assets/macos-arm64
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: macos-x86_64
+          path: release-assets/macos-x86_64
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: windows-installer
+          path: release-assets/windows
+      - name: Prepare release files
+        shell: bash
+        run: |
+          mkdir upload
+          find release-assets -type f \( -name '*.dmg' -o -name '*.exe' -o -name '*.zip' \) -exec cp {} upload/ \;
+          (cd upload && sha256sum *.dmg *.exe *.zip > BROWSOR-2.0.0-SHA256SUMS.txt)
+          cat > release-notes.md <<'EOF'
+          ## BROWSOR 2.0
+
+          The redesigned BROWSOR workspace is now released as the stable 2.0 version.
+
+          - Apple-inspired light workspace with translucent surfaces and system-blue accents.
+          - Reader mode from the toolbar, command menu or `Ctrl+Shift+R`.
+          - Focus mode, AI space, Favorites and Downloads quick actions.
+          - Fully editable local profile, browsing, privacy, AI and style settings.
+          - DuckDuckGo remains the default search engine.
+
+          Downloads include a Windows x64 installer, portable ZIP, macOS Apple Silicon DMG, macOS Intel DMG and SHA-256 checksums.
+          EOF
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --title "BROWSOR 2.0" --notes-file release-notes.md upload/*
 
